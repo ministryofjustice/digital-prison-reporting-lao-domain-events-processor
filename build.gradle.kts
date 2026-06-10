@@ -27,11 +27,11 @@ dependencies {
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 kotlin {
-  jvmToolchain(25)
+  jvmToolchain(21)
   compilerOptions {
     freeCompilerArgs.addAll("-Xannotation-default-target=param-property")
   }
@@ -39,6 +39,6 @@ kotlin {
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
   }
 }

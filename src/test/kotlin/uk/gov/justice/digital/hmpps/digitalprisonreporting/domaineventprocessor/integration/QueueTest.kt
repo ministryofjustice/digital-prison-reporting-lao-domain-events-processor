@@ -10,7 +10,6 @@ import java.util.Date
 class QueueTest : IntegrationTestBase() {
   @Test
   fun `event is published to outbound topic`() = runTest {
-    String::class.java
     val event = LAOEvent(
       "probation-case.restriction.updated",
       1,
