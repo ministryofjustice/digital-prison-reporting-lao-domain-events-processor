@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.info.BuildProperties
-import uk.gov.justice.digital.hmpps.templatepackagename.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.IntegrationTestBase
 
 class InfoTest(
   @Autowired private val buildProperties: BuildProperties,

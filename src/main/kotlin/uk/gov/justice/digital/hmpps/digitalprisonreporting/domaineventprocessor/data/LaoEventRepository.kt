@@ -16,12 +16,12 @@ class LaoEventRepository(
     return LaoData(
       jdbcTemplate.queryForList(
         "SELECT crn, user, reason, since, until FROM product_.lao_exclusions WHERE crn = $crn",
-        LaoEntry::class.java
-      ),
+        LaoEntry::class.java,
+      ) as List<LaoEntry>,
       jdbcTemplate.queryForList(
         "SELECT crn, user, reason, since, until FROM product_.lao_restrictions WHERE crn = $crn",
-        LaoEntry::class.java
-      )
+        LaoEntry::class.java,
+      ) as List<LaoEntry>,
     )
   }
 
@@ -42,14 +42,12 @@ class LaoEventRepository(
     val table = if (dataType == LaoDataType.Exclusion) "lao_exclusions" else "lao_restrictions"
     jdbcTemplate.execute("UPDATE $table SET reason = ${laoEntry.reason}, since = ${laoEntry.since}, until = ${laoEntry.until ?: "NULL"} WHERE crn = ${laoEntry.crn} AND user_id = ${laoEntry.user}")
   }
-
 }
 
 enum class LaoDataType {
   Restriction,
   Exclusion,
 }
-
 
 data class LaoData(
   val exclusions: List<LaoEntry>,
