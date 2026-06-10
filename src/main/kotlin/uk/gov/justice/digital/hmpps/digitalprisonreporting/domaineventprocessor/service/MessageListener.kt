@@ -43,13 +43,15 @@ class InboundMessageListener(
     val localLaoData = laoEventRepository.getLaoDataForCrn(crn)
 
     if (liveLaoDataTransformedRestrictions.size != localLaoData.restrictions.size && liveLaoDataTransformedExclusions.size != localLaoData.exclusions.size) {
-      throw IllegalArgumentException("""
+      throw IllegalArgumentException(
+        """
         Restrictions AND exclusions for crn $crn were added and/or removed:
         Live restrictions: ${liveLaoDataTransformedRestrictions.size}
         Local restrictions: ${localLaoData.restrictions.size}
         Live exclusions: ${liveLaoDataTransformedExclusions.size}
         Local exclusions: ${localLaoData.exclusions.size}
-      """.trimIndent())
+        """.trimIndent(),
+      )
     }
     if (liveLaoDataTransformedRestrictions.size != localLaoData.restrictions.size) {
       processChanges(liveLaoDataTransformedRestrictions, localLaoData.restrictions, LaoDataType.Restriction)

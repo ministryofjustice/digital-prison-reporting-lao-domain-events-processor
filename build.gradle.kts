@@ -23,14 +23,15 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.41") {
     exclude(group = "io.swagger.core.v3")
   }
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+  toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 kotlin {
-  jvmToolchain(21)
+  jvmToolchain(25)
   compilerOptions {
     freeCompilerArgs.addAll("-Xannotation-default-target=param-property")
   }
@@ -38,6 +39,6 @@ kotlin {
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
 }
