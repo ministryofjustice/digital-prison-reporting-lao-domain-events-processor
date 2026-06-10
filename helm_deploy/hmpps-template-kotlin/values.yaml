@@ -1,11 +1,11 @@
 generic-service:
-  nameOverride: hmpps-template-kotlin
+  nameOverride: dpr-lao-domain-event-processor
   productId: "UNASSIGNED" # productId for the product that this belongs too, i.e. DPS001, see README.md for details
 
   replicaCount: 4
 
   image:
-    repository: ghcr.io/ministryofjustice/hmpps-template-kotlin
+    repository: ghcr.io/ministryofjustice/dpr-lao-domain-event-processor
     tag: app_version # override at deployment time
     port: 8080
 
@@ -43,4 +43,4 @@ generic-service:
       - internal
 
 generic-prometheus-alerts:
-  targetApplication: hmpps-template-kotlin
+  targetApplication: dpr-lao-domain-event-processor

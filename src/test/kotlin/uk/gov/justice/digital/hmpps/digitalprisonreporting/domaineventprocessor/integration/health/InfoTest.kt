@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.templatepackagename.integration.health
+package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.health
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +16,7 @@ class InfoTest(
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("build.name").isEqualTo("hmpps-template-kotlin")
+      .jsonPath("build.name").isEqualTo("dpr-lao-domain-event-processor")
   }
 
   @Test

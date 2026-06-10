@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.templatepackagename.integration.health
+package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.health
 
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.templatepackagename.integration.IntegrationTestBase

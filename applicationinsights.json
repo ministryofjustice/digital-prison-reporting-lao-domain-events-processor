@@ -1,6 +1,6 @@
 {
   "role": {
-    "name": "hmpps-template-kotlin"
+    "name": "dpr-lao-domain-event-processor"
   },
   "customDimensions": {
     "service.version": "${BUILD_NUMBER}"
