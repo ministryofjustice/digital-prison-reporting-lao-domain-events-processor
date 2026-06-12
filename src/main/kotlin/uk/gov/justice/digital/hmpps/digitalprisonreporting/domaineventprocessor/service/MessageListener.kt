@@ -2,18 +2,21 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 
 import io.awspring.cloud.sqs.annotation.SqsListener
 import jakarta.transaction.Transactional
-import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.*
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestrictionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toLaoEntry
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.LaoEntry
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.toExclusion
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.toRestriction
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.probationintegration.LaoDataProbationIntegrationClient
 import uk.gov.justice.hmpps.sqs.SnsMessage
 import java.time.LocalDateTime
 
 @Service
 class InboundMessageListener(
-  private val applicationContext: ApplicationContext,
   private val laoExclusionRepository: LaoExclusionRepository,
   private val laoRestrictionRepository: LaoRestrictionRepository,
   private val laoDataProbationIntegrationClient: LaoDataProbationIntegrationClient,
@@ -32,7 +35,6 @@ class InboundMessageListener(
   fun updateLaoEntry(laoEntry: LaoEntry, laoDataType: LaoDataType) {
     if (laoDataType == LaoDataType.Exclusion) laoExclusionRepository.updateExclusionLaoEntry(laoEntry) else laoRestrictionRepository.updateRestrictionLaoEntry(laoEntry)
   }
-
 
   /**
    * Get the LAO event and check to see if it's an addition, removal, or a change in an existing entry.
@@ -83,10 +85,35 @@ class InboundMessageListener(
     val processedRestrictionsSuccess = processUpdates(liveLaoDataTransformedRestrictions, localLaoData.restrictions, LaoDataType.Restriction)
     val processedExclusionsSuccess = processUpdates(liveLaoDataTransformedExclusions, localLaoData.exclusions, LaoDataType.Exclusion)
 
-    if (processedExclusionsSuccess || processedRestrictionsSuccess) {
+    if (processAllUpdates(
+        liveLaoDataTransformedExclusions,
+        localLaoData.exclusions,
+        liveLaoDataTransformedRestrictions,
+        localLaoData.restrictions,
+      )
+    ) {
       return
     }
     throw IllegalArgumentException("No changes detected even though event was fired!")
+  }
+
+  private fun processAllUpdates(
+    liveExclusionEntries: List<LaoEntry>,
+    localExclusionEntries: List<LaoEntry>,
+    liveRestrictionEntries: List<LaoEntry>,
+    localRestrictionEntries: List<LaoEntry>,
+  ): Boolean {
+    val differencesLiveExclusions = liveExclusionEntries.subtract(localExclusionEntries)
+    val differencesLiveRestrictions = liveRestrictionEntries.subtract(localRestrictionEntries)
+
+    if (differencesLiveRestrictions.size + differencesLiveExclusions.size > 1) {
+      throw IllegalArgumentException("Invalid number of LAO entries changed: there were ${differencesLiveExclusions.size} changed exclusions and ${differencesLiveRestrictions.size} changed restrictions")
+    }
+
+    val processedRestrictionsSuccess = processUpdates(liveRestrictionEntries, localRestrictionEntries, LaoDataType.Restriction)
+    val processedExclusionsSuccess = processUpdates(liveExclusionEntries, localExclusionEntries, LaoDataType.Exclusion)
+
+    return processedExclusionsSuccess || processedRestrictionsSuccess
   }
 
   private fun processUpdates(liveEntries: List<LaoEntry>, localEntries: List<LaoEntry>, laoDataType: LaoDataType): Boolean {
@@ -135,4 +162,14 @@ data class LAOEvent(
       val value: String,
     )
   }
+}
+
+data class LaoData(
+  val exclusions: List<LaoEntry>,
+  val restrictions: List<LaoEntry>,
+)
+
+enum class LaoDataType {
+  Restriction,
+  Exclusion,
 }

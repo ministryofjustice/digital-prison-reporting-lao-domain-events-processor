@@ -24,11 +24,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoDataType
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoEntry
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestrictionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toExclusion
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.mocks.OAuthExtension
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer.setLocalStackProperties
@@ -36,7 +33,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ProbationIntegrationLaoMockServer
 import uk.gov.justice.hmpps.sqs.*
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
-import java.time.LocalDateTime
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Import(JwtAuthorisationHelper::class, TestFlywayConfig::class)
@@ -118,10 +114,10 @@ abstract class IntegrationTestBase {
     laoRestrictionRepository.deleteAll()
     laoExclusionRepository.flush()
     laoRestrictionRepository.flush()
-//    inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build()).await()
-//    inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).await()
-//    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-//    await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 0 }
+    inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build()).await()
+    inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).await()
+    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
+    await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 0 }
   }
 
   companion object {

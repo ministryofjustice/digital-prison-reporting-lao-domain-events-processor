@@ -8,12 +8,12 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoDataType
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoEntry
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toExclusion
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toLaoEntry
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toRestriction
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.LaoEntry
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.toExclusion
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.toRestriction
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.LAOEvent
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.LaoDataType
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDateTime
 
@@ -27,10 +27,11 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toExclusion(),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "excludedFrom": [
           {
@@ -49,7 +50,8 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
@@ -60,14 +62,16 @@ class QueueTest : IntegrationTestBase() {
     assertThat(restrictions.size).isEqualTo(1)
 
     val restriction = restrictions.first().toLaoEntry()
-    assertThat(restriction).isEqualTo(LaoEntry(
-      "A111111",
-      "usera",
-      "Restricted",
-      LocalDateTime.of(2026, 1, 1, 12, 0, 0),
-      LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-      1
-    ))
+    assertThat(restriction).isEqualTo(
+      LaoEntry(
+        "A111111",
+        "usera",
+        "Restricted",
+        LocalDateTime.of(2026, 1, 1, 12, 0, 0),
+        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        1,
+      ),
+    )
   }
 
   @Test
@@ -79,10 +83,11 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toExclusion(),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "excludedFrom": [
           {
@@ -99,7 +104,8 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Exclusion)
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
@@ -114,7 +120,7 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 0, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
 
     assertThat(exclusions[1].toLaoEntry()).satisfies({
@@ -122,7 +128,7 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Excluded!")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0))
     })
   }
 
@@ -135,17 +141,18 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toExclusion(),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Exclusion)
-
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
@@ -164,7 +171,7 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toExclusion(),
     )
     laoRestrictionRepository.saveAndFlush(
@@ -174,10 +181,11 @@ class QueueTest : IntegrationTestBase() {
         "Restricted",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toRestriction(),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "excludedFrom": [
           {
@@ -189,7 +197,8 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
@@ -208,10 +217,11 @@ class QueueTest : IntegrationTestBase() {
         "Restricted",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toRestriction(),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "restrictedTo": [
           {
@@ -223,7 +233,8 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
@@ -237,7 +248,7 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 0, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0))
     })
   }
 
@@ -250,10 +261,11 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toExclusion(),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "excludedFrom": [
           {
@@ -265,7 +277,8 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
@@ -279,13 +292,14 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 0, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0))
     })
   }
 
   @Test
   fun `two exclusion additions should throw an error`() = runTest {
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "excludedFrom": [
           {
@@ -302,11 +316,10 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 1 }
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
@@ -315,7 +328,8 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `two restriction additions should throw an error`() = runTest {
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "restrictedTo": [
           {
@@ -332,11 +346,10 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 1 }
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
@@ -345,7 +358,8 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `a restriction and exclusion addition should throw an error`() = runTest {
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "restrictedTo": [
           {
@@ -364,11 +378,10 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 1 }
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
@@ -385,7 +398,7 @@ class QueueTest : IntegrationTestBase() {
           "Restricted",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null
+          null,
         ).toRestriction(),
         LaoEntry(
           "A111111",
@@ -393,11 +406,12 @@ class QueueTest : IntegrationTestBase() {
           "Restricted",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null
+          null,
         ).toRestriction(),
-      )
+      ),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "restrictedTo": [
           {
@@ -414,11 +428,10 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 1 }
 
     assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
@@ -429,14 +442,14 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
     assertThat(restrictions[1].toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Restricted")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
   }
 
@@ -450,7 +463,7 @@ class QueueTest : IntegrationTestBase() {
           "Excluded!",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null
+          null,
         ).toExclusion(),
         LaoEntry(
           "A111111",
@@ -458,11 +471,12 @@ class QueueTest : IntegrationTestBase() {
           "Excluded!",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null
+          null,
         ).toExclusion(),
-      )
+      ),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "excludedFrom": [
           {
@@ -479,7 +493,8 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
@@ -494,14 +509,14 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
     assertThat(exclusions[1].toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Excluded!")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
   }
 
@@ -514,7 +529,7 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 30, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toExclusion(),
     )
     laoRestrictionRepository.saveAndFlush(
@@ -524,10 +539,11 @@ class QueueTest : IntegrationTestBase() {
         "Restricted",
         LocalDateTime.of(2026, 1, 1, 12, 30, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toRestriction(),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "restrictedTo": [
           {
@@ -546,21 +562,20 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 1 }
 
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
     assertThat(exclusions.size).isEqualTo(1)
     assertThat(exclusions.first().toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
-      assertThat(it.userId).isEqualTo("userb")
+      assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
     assertThat(restrictions.size).isEqualTo(1)
@@ -569,20 +584,9 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
   }
-
-
-
-
-
-
-
-
-
-
-
 
   @Test
   fun `two restriction deletions should throw an error`() = runTest {
@@ -594,7 +598,7 @@ class QueueTest : IntegrationTestBase() {
           "Restricted",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null
+          null,
         ).toRestriction(),
         LaoEntry(
           "A111111",
@@ -602,38 +606,38 @@ class QueueTest : IntegrationTestBase() {
           "Restricted",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null
+          null,
         ).toRestriction(),
-      )
+      ),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 1 }
 
     assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
-    assertThat(restrictions.size).isEqualTo(12)
+    assertThat(restrictions.size).isEqualTo(2)
     assertThat(restrictions.first().toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
     assertThat(restrictions[1].toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Restricted")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
   }
 
@@ -644,31 +648,31 @@ class QueueTest : IntegrationTestBase() {
         LaoEntry(
           "A111111",
           "usera",
-          "Restricted",
+          "Excluded!",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null
+          null,
         ).toExclusion(),
         LaoEntry(
           "A111111",
           "userb",
-          "Restricted",
+          "Excluded!",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null
+          null,
         ).toExclusion(),
-      )
+      ),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 1 }
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
@@ -679,14 +683,14 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
     assertThat(exclusions[1].toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Excluded!")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
   }
 
@@ -699,7 +703,7 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 30, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toExclusion(),
     )
     laoRestrictionRepository.saveAndFlush(
@@ -709,29 +713,29 @@ class QueueTest : IntegrationTestBase() {
         "Restricted",
         LocalDateTime.of(2026, 1, 1, 12, 30, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null
+        null,
       ).toRestriction(),
     )
-    probationIntegrationLaoMockServer.stubGetLaoDataForCrn("""
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
       {
         "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     publishLaoEvent(LaoDataType.Restriction)
 
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
-    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 1 }
 
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
     assertThat(exclusions.size).isEqualTo(1)
     assertThat(exclusions.first().toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
-      assertThat(it.userId).isEqualTo("userb")
+      assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
     assertThat(restrictions.size).isEqualTo(1)
@@ -740,13 +744,13 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0),)
+      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
     })
   }
 
-  private  fun publishLaoEvent(type: LaoDataType) {
+  private fun publishLaoEvent(type: LaoDataType) {
     val event = LAOEvent(
-      "probation-case.restriction.updated",
+      "probation-case.${type.name.lowercase()}.updated",
       1,
       "",
       LocalDateTime.now(),
