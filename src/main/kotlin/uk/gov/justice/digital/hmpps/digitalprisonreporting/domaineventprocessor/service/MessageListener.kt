@@ -56,8 +56,8 @@ class InboundMessageListener(
       throw IllegalArgumentException("CRN value was blank")
     }
     val liveLaoData = laoDataProbationIntegrationClient.getLaoData(crn)
-    val liveLaoDataTransformedExclusions = liveLaoData.excludedFrom.map { LaoEntry(crn, it.username, liveLaoData.exclusionMessage, it.since, it.until, null) }
-    val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoEntry(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until, null) }
+    val liveLaoDataTransformedExclusions = liveLaoData.excludedFrom.map { LaoEntry(crn, it.username, liveLaoData.exclusionMessage, it.since, it.until) }
+    val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoEntry(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until) }
 
     val localLaoData = getLaoDataForCrn(crn)
 
@@ -81,9 +81,6 @@ class InboundMessageListener(
       processChanges(liveLaoDataTransformedExclusions, localLaoData.exclusions, LaoDataType.Exclusion)
       return
     }
-
-    val processedRestrictionsSuccess = processUpdates(liveLaoDataTransformedRestrictions, localLaoData.restrictions, LaoDataType.Restriction)
-    val processedExclusionsSuccess = processUpdates(liveLaoDataTransformedExclusions, localLaoData.exclusions, LaoDataType.Exclusion)
 
     if (processAllUpdates(
         liveLaoDataTransformedExclusions,

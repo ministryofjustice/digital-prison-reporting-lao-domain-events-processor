@@ -38,4 +38,4 @@ data class LaoExclusion(
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   val id: Long?,
 )
-fun LaoExclusion.toLaoEntry() = LaoEntry(crn, userId, reason, since, until, id)
+fun LaoExclusion.toLaoEntry() = LaoEntry(crn, userId, reason, since, until)

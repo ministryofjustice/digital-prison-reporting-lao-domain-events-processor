@@ -27,7 +27,6 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toExclusion(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -69,7 +68,6 @@ class QueueTest : IntegrationTestBase() {
         "Restricted",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        1,
       ),
     )
   }
@@ -83,7 +81,6 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toExclusion(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -111,6 +108,8 @@ class QueueTest : IntegrationTestBase() {
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 1 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
 
+//    await().atLeast(Duration.ofMillis(1000)).await()
+//      .untilAsserted {
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
     assertThat(exclusions.size).isEqualTo(2)
@@ -130,6 +129,7 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
       assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0))
     })
+//    }
   }
 
   @Test
@@ -141,7 +141,6 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toExclusion(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -171,7 +170,6 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toExclusion(),
     )
     laoRestrictionRepository.saveAndFlush(
@@ -181,7 +179,6 @@ class QueueTest : IntegrationTestBase() {
         "Restricted",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toRestriction(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -217,7 +214,6 @@ class QueueTest : IntegrationTestBase() {
         "Restricted",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toRestriction(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -261,7 +257,6 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 0, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toExclusion(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -398,7 +393,6 @@ class QueueTest : IntegrationTestBase() {
           "Restricted",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null,
         ).toRestriction(),
         LaoEntry(
           "A111111",
@@ -406,7 +400,6 @@ class QueueTest : IntegrationTestBase() {
           "Restricted",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null,
         ).toRestriction(),
       ),
     )
@@ -463,7 +456,6 @@ class QueueTest : IntegrationTestBase() {
           "Excluded!",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null,
         ).toExclusion(),
         LaoEntry(
           "A111111",
@@ -471,7 +463,6 @@ class QueueTest : IntegrationTestBase() {
           "Excluded!",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null,
         ).toExclusion(),
       ),
     )
@@ -529,7 +520,6 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 30, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toExclusion(),
     )
     laoRestrictionRepository.saveAndFlush(
@@ -539,7 +529,6 @@ class QueueTest : IntegrationTestBase() {
         "Restricted",
         LocalDateTime.of(2026, 1, 1, 12, 30, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toRestriction(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -598,7 +587,6 @@ class QueueTest : IntegrationTestBase() {
           "Restricted",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null,
         ).toRestriction(),
         LaoEntry(
           "A111111",
@@ -606,7 +594,6 @@ class QueueTest : IntegrationTestBase() {
           "Restricted",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null,
         ).toRestriction(),
       ),
     )
@@ -651,7 +638,6 @@ class QueueTest : IntegrationTestBase() {
           "Excluded!",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null,
         ).toExclusion(),
         LaoEntry(
           "A111111",
@@ -659,7 +645,6 @@ class QueueTest : IntegrationTestBase() {
           "Excluded!",
           LocalDateTime.of(2026, 1, 1, 12, 30, 0),
           LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-          null,
         ).toExclusion(),
       ),
     )
@@ -703,7 +688,6 @@ class QueueTest : IntegrationTestBase() {
         "Excluded!",
         LocalDateTime.of(2026, 1, 1, 12, 30, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toExclusion(),
     )
     laoRestrictionRepository.saveAndFlush(
@@ -713,7 +697,6 @@ class QueueTest : IntegrationTestBase() {
         "Restricted",
         LocalDateTime.of(2026, 1, 1, 12, 30, 0),
         LocalDateTime.of(2026, 1, 1, 13, 0, 0),
-        null,
       ).toRestriction(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(

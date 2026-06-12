@@ -39,4 +39,4 @@ data class LaoRestriction(
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   val id: Long?,
 )
-fun LaoRestriction.toLaoEntry() = LaoEntry(crn, userId, reason, since, until, id)
+fun LaoRestriction.toLaoEntry() = LaoEntry(crn, userId, reason, since, until)

@@ -10,7 +10,6 @@ data class LaoEntry(
   val reason: String?,
   val since: LocalDateTime,
   val until: LocalDateTime?,
-  val id: Long?,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -20,8 +19,7 @@ data class LaoEntry(
   }
 
   override fun hashCode(): Int {
-    var result = id?.hashCode() ?: 0
-    result = 31 * result + crn.hashCode()
+    var result = +crn.hashCode()
     result = 31 * result + userId.hashCode()
     result = 31 * result + (reason?.hashCode() ?: 0)
     result = 31 * result + since.hashCode()
@@ -29,5 +27,5 @@ data class LaoEntry(
     return result
   }
 }
-fun LaoEntry.toExclusion() = LaoExclusion(crn, userId, reason, since, until, id)
-fun LaoEntry.toRestriction() = LaoRestriction(crn, userId, reason, since, until, id)
+fun LaoEntry.toExclusion() = LaoExclusion(crn, userId, reason, since, until, null)
+fun LaoEntry.toRestriction() = LaoRestriction(crn, userId, reason, since, until, null)
