@@ -1,6 +1,13 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.test.runTest
+import org.awaitility.Awaitility.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,31 +24,26 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoDataType
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoEntry
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestrictionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toExclusion
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.mocks.OAuthExtension
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
-import uk.gov.justice.hmpps.sqs.HmppsQueueService
-import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
-import uk.gov.justice.hmpps.sqs.MessageAttribute
-import uk.gov.justice.hmpps.sqs.MessageAttributes
-import uk.gov.justice.hmpps.sqs.MissingQueueException
-import uk.gov.justice.hmpps.sqs.MissingTopicException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ProbationIntegrationLaoMockServer
+import uk.gov.justice.hmpps.sqs.*
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
+import java.time.LocalDateTime
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@Import(JwtAuthorisationHelper::class)
+@Import(JwtAuthorisationHelper::class, TestFlywayConfig::class)
 @ExtendWith(OAuthExtension::class)
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 abstract class IntegrationTestBase {
-
-  @BeforeEach
-  fun `clear queues`() {
-    inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build()).get()
-    inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).get()
-    inboundSqsOnlyClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundSqsOnlyQueueUrl).build()).get()
-  }
 
   fun HmppsSqsProperties.inboundQueueConfig() = queues["inboundqueue"] ?: throw MissingQueueException("inboundqueue has not been loaded from configuration properties")
 
@@ -49,16 +51,13 @@ abstract class IntegrationTestBase {
 
   protected val inboundQueue by lazy { hmppsQueueService.findByQueueId("inboundqueue") ?: throw MissingQueueException("HmppsQueue inboundqueue not found") }
   private val inboundTopic by lazy { hmppsQueueService.findByTopicId("inboundtopic") ?: throw MissingQueueException("HmppsTopic inboundtopic not found") }
-  private val inboundSqsOnlyQueue by lazy { hmppsQueueService.findByQueueId("inboundsqsonlyqueue") ?: throw MissingQueueException("HmppsQueue inboundsqsonlyqueue not found") }
 
   protected val inboundSqsClient by lazy { inboundQueue.sqsClient }
   protected val inboundSqsDlqClient by lazy { inboundQueue.sqsDlqClient as SqsAsyncClient }
   protected val inboundSnsClient by lazy { inboundTopic.snsClient }
-  protected val inboundSqsOnlyClient by lazy { inboundSqsOnlyQueue.sqsClient }
 
   protected val inboundQueueUrl by lazy { inboundQueue.queueUrl }
   protected val inboundDlqUrl by lazy { inboundQueue.dlqUrl as String }
-  protected val inboundSqsOnlyQueueUrl by lazy { inboundSqsOnlyQueue.queueUrl }
 
   protected val inboundTopicArn by lazy { inboundTopic.arn }
 
@@ -70,6 +69,12 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var hmppsQueueService: HmppsQueueService
+
+  @Autowired
+  protected lateinit var laoExclusionRepository: LaoExclusionRepository
+
+  @Autowired
+  protected lateinit var laoRestrictionRepository: LaoRestrictionRepository
 
   @MockitoSpyBean
   protected lateinit var hmppsSqsPropertiesSpy: HmppsSqsProperties
@@ -106,6 +111,19 @@ abstract class IntegrationTestBase {
     hmppsAuth.stubHealthPing(status)
   }
 
+  @BeforeEach
+  fun setup() = runTest {
+    probationIntegrationLaoMockServer.resetAll()
+    laoExclusionRepository.deleteAll()
+    laoRestrictionRepository.deleteAll()
+    laoExclusionRepository.flush()
+    laoRestrictionRepository.flush()
+//    inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build()).await()
+//    inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).await()
+//    await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
+//    await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 0 }
+  }
+
   companion object {
     private val localStackContainer = LocalStackContainer.instance
 
@@ -113,6 +131,31 @@ abstract class IntegrationTestBase {
     @DynamicPropertySource
     fun testcontainers(registry: DynamicPropertyRegistry) {
       localStackContainer?.also { setLocalStackProperties(it, registry) }
+    }
+
+    val pgContainer = PostgresContainer.instance
+    val probationIntegrationLaoMockServer = ProbationIntegrationLaoMockServer()
+
+    @BeforeAll
+    @JvmStatic
+    fun setupClass() {
+      probationIntegrationLaoMockServer.start()
+    }
+
+    @AfterAll
+    @JvmStatic
+    fun teardownClass() {
+      probationIntegrationLaoMockServer.stop()
+    }
+
+    @JvmStatic
+    @DynamicPropertySource
+    fun setupClass(registry: DynamicPropertyRegistry) {
+      pgContainer?.run {
+        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
+        registry.add("spring.datasource.username", pgContainer::getUsername)
+        registry.add("spring.datasource.password", pgContainer::getPassword)
+      }
     }
   }
 }

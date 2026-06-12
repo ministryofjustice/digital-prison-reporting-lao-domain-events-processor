@@ -41,8 +41,21 @@ management.endpoint:
   info.cache.time-to-live: 0
 
 hmpps:
+  sqs:
+    provider: localstack
+    queues:
+      inboundqueue:
+        queueName: inbound-queue
+        dlqName: inbound-dlq
+        subscribeTopicId: inboundtopic
+        subscribeFilter: '{"eventType":[ "probation-case.restriction.updated", "test.type"] }'
+    topics:
+      inboundtopic:
+        arn: arn:aws:sns:eu-west-2:000000000000:inbound-topic
   auth:
     url: http://localhost:8090/auth
+laodata:
+  host: http://localhost:8082
 
 logging:
   level:

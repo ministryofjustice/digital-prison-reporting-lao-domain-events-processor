@@ -9,7 +9,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.util.retry.Retry
 import java.io.IOException
 import java.time.Duration
-import java.util.Date
+import java.time.LocalDateTime
 
 class LaoDataProbationIntegrationClient(
   private val laoDataProbationIntegrationClient: WebClient,
@@ -45,13 +45,13 @@ class LaoDataProbationIntegrationClient(
 
 data class LaoApiDataEntry(
   val username: String,
-  val since: Date,
-  val until: Date?,
+  val since: LocalDateTime,
+  val until: LocalDateTime?,
 )
 
 data class LaoDataResponse(
-  val excludedFrom: List<LaoApiDataEntry>,
-  val restrictedTo: List<LaoApiDataEntry>,
-  val exclusionMessage: String,
-  val restrictionMessage: String,
+  val excludedFrom: List<LaoApiDataEntry> = emptyList(),
+  val restrictedTo: List<LaoApiDataEntry> = emptyList(),
+  val exclusionMessage: String?,
+  val restrictionMessage: String?,
 )

@@ -1,28 +1,45 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service
 
 import io.awspring.cloud.sqs.annotation.SqsListener
+import jakarta.transaction.Transactional
+import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoDataType
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoEntry
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoEventRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.*
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.probationintegration.LaoDataProbationIntegrationClient
 import uk.gov.justice.hmpps.sqs.SnsMessage
-import java.util.Date
+import java.time.LocalDateTime
 
 @Service
 class InboundMessageListener(
-  private val laoEventRepository: LaoEventRepository,
+  private val applicationContext: ApplicationContext,
+  private val laoExclusionRepository: LaoExclusionRepository,
+  private val laoRestrictionRepository: LaoRestrictionRepository,
   private val laoDataProbationIntegrationClient: LaoDataProbationIntegrationClient,
   private val jsonMapper: JsonMapper,
 ) {
+  fun getLaoDataForCrn(crn: String): LaoData = LaoData(
+    laoExclusionRepository.getLaoExclusionsForCrn(crn).map { it.toLaoEntry() },
+    laoRestrictionRepository.getLaoRestrictionsForCrn(crn).map { it.toLaoEntry() },
+  )
+  fun deleteLaoEntry(crn: String, userId: String, laoDataType: LaoDataType) {
+    if (laoDataType == LaoDataType.Exclusion) laoExclusionRepository.deleteExclusionLaoEntry(crn, userId) else laoRestrictionRepository.deleteRestrictionLaoEntry(crn, userId)
+  }
+  fun addLaoEntry(laoEntry: LaoEntry, laoDataType: LaoDataType) {
+    if (laoDataType == LaoDataType.Exclusion) laoExclusionRepository.save(laoEntry.toExclusion()) else laoRestrictionRepository.save(laoEntry.toRestriction())
+  }
+  fun updateLaoEntry(laoEntry: LaoEntry, laoDataType: LaoDataType) {
+    if (laoDataType == LaoDataType.Exclusion) laoExclusionRepository.updateExclusionLaoEntry(laoEntry) else laoRestrictionRepository.updateRestrictionLaoEntry(laoEntry)
+  }
+
 
   /**
    * Get the LAO event and check to see if it's an addition, removal, or a change in an existing entry.
    * Ensure that there is exactly one change
    */
   @SqsListener("inboundqueue", factory = "hmppsQueueContainerFactoryProxy")
+  @Transactional
   fun processMessage(message: SnsMessage) {
     val event: LAOEvent = jsonMapper.readValue(message.message)
     val identifiers = event.personReference.identifiers
@@ -37,10 +54,10 @@ class InboundMessageListener(
       throw IllegalArgumentException("CRN value was blank")
     }
     val liveLaoData = laoDataProbationIntegrationClient.getLaoData(crn)
-    val liveLaoDataTransformedExclusions = liveLaoData.excludedFrom.map { LaoEntry(crn, it.username, liveLaoData.exclusionMessage, it.since, it.until) }
-    val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoEntry(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until) }
+    val liveLaoDataTransformedExclusions = liveLaoData.excludedFrom.map { LaoEntry(crn, it.username, liveLaoData.exclusionMessage, it.since, it.until, null) }
+    val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoEntry(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until, null) }
 
-    val localLaoData = laoEventRepository.getLaoDataForCrn(crn)
+    val localLaoData = getLaoDataForCrn(crn)
 
     if (liveLaoDataTransformedRestrictions.size != localLaoData.restrictions.size && liveLaoDataTransformedExclusions.size != localLaoData.exclusions.size) {
       throw IllegalArgumentException(
@@ -81,28 +98,25 @@ class InboundMessageListener(
     }
     val liveDiffEntry = differencesLive.first()
     val localDiffEntry = differencesLocal.first()
-    if (localDiffEntry.crn != liveDiffEntry.crn || localDiffEntry.user != liveDiffEntry.user) {
+    if (localDiffEntry.crn != liveDiffEntry.crn || localDiffEntry.userId != liveDiffEntry.userId) {
       throw IllegalArgumentException("The record changed should be for the same user and CRN. Instead, it was for local user ${"foobar"} and crn $localDiffEntry.crn and live user ${"foobar"} and crn $liveDiffEntry.crn")
     }
-    laoEventRepository.updateLaoEntry(liveDiffEntry, laoDataType)
+    updateLaoEntry(liveDiffEntry, laoDataType)
     return true
   }
 
   private fun processChanges(liveEntries: List<LaoEntry>, localEntries: List<LaoEntry>, laoDataType: LaoDataType) {
-    if (liveEntries.size > localEntries.size) {
-      val newElementList = liveEntries.subtract(localEntries)
-      if (newElementList.size != 1) {
-        throw IllegalArgumentException("More than 1 LAO entry changed!")
-      }
-
-      laoEventRepository.addLaoEntry(newElementList.first(), laoDataType)
-    }
-
+    val newElementList = liveEntries.subtract(localEntries)
     val removedElementList = localEntries.subtract(liveEntries)
-    if (removedElementList.size != 1) {
-      throw IllegalArgumentException("More than 1 LAO entry changed!")
+
+    if (newElementList.size + removedElementList.size != 1) {
+      throw IllegalArgumentException("Invalid number of LAO entries changed: there were ${newElementList.size} new entries and ${removedElementList.size} removed entries")
     }
-    laoEventRepository.deleteLaoEntry(removedElementList.first().crn, removedElementList.first().user, LaoDataType.Exclusion)
+    if (liveEntries.size > localEntries.size) {
+      addLaoEntry(newElementList.first(), laoDataType)
+      return
+    }
+    deleteLaoEntry(removedElementList.first().crn, removedElementList.first().userId, laoDataType)
   }
 }
 
@@ -110,7 +124,7 @@ data class LAOEvent(
   val eventType: String,
   val version: Int,
   val description: String,
-  val occurredAt: Date,
+  val occurredAt: LocalDateTime,
   val personReference: PersonReference,
 ) {
   data class PersonReference(

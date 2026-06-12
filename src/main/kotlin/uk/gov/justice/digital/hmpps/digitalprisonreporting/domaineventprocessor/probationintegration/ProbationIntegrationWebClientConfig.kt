@@ -49,8 +49,8 @@ class ProbationIntegrationWebClientConfig(
 
   @Bean
   fun laoDataClient(
-    laoDataProbationIntegrationClient: WebClient,
+    laoDataProbationIntegrationWebClient: WebClient,
   ): LaoDataProbationIntegrationClient = LaoDataProbationIntegrationClient(
-    laoDataProbationIntegrationClient,
+    laoDataProbationIntegrationWebClient,
   )
 }
