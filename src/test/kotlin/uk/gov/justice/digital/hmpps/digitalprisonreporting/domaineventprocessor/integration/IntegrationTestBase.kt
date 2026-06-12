@@ -31,7 +31,13 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ProbationIntegrationLaoMockServer
-import uk.gov.justice.hmpps.sqs.*
+import uk.gov.justice.hmpps.sqs.HmppsQueueService
+import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
+import uk.gov.justice.hmpps.sqs.MessageAttribute
+import uk.gov.justice.hmpps.sqs.MessageAttributes
+import uk.gov.justice.hmpps.sqs.MissingQueueException
+import uk.gov.justice.hmpps.sqs.MissingTopicException
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -91,7 +97,7 @@ abstract class IntegrationTestBase {
     )
   }
 
-  protected fun jsonString(any: Any) = jsonMapper.writeValueAsString(any)
+  protected fun jsonString(any: Any): String? = jsonMapper.writeValueAsString(any)
 
   protected fun messageAttributesWithEventType(eventType: String): MessageAttributes = MessageAttributes().apply {
     put("eventType", MessageAttribute("String", eventType))
@@ -127,6 +133,11 @@ abstract class IntegrationTestBase {
     @DynamicPropertySource
     fun testcontainers(registry: DynamicPropertyRegistry) {
       localStackContainer?.also { setLocalStackProperties(it, registry) }
+      pgContainer?.run {
+        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
+        registry.add("spring.datasource.username", pgContainer::getUsername)
+        registry.add("spring.datasource.password", pgContainer::getPassword)
+      }
     }
 
     val pgContainer = PostgresContainer.instance
@@ -142,16 +153,6 @@ abstract class IntegrationTestBase {
     @JvmStatic
     fun teardownClass() {
       probationIntegrationLaoMockServer.stop()
-    }
-
-    @JvmStatic
-    @DynamicPropertySource
-    fun setupClass(registry: DynamicPropertyRegistry) {
-      pgContainer?.run {
-        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource.username", pgContainer::getUsername)
-        registry.add("spring.datasource.password", pgContainer::getPassword)
-      }
     }
   }
 }
