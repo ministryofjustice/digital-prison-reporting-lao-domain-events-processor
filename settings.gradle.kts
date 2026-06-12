@@ -1,1 +1,1 @@
-rootProject.name = "dpr-lao-domain-event-processor"
+rootProject.name = "digital-prison-reporting-lao-domain-events-processor"

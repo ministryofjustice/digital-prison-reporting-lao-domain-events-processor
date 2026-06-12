@@ -1,6 +1,6 @@
 {
   "role": {
-    "name": "dpr-lao-domain-event-processor"
+    "name": "digital-prison-reporting-lao-domain-events-processor"
   },
   "customDimensions": {
     "service.version": "${BUILD_NUMBER}"

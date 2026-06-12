@@ -4,7 +4,7 @@ info.app:
 
 spring:
   application:
-    name: dpr-lao-domain-event-processor
+    name: digital-prison-reporting-lao-domain-events-processor
   codec:
     max-in-memory-size: 10MB
   datasource:

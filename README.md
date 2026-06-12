@@ -1,4 +1,4 @@
-# dpr-lao-domain-event-processor
+# digital-prison-reporting-lao-domain-events-processor
 
 ## Running the application locally
 
@@ -18,7 +18,7 @@ will run the application and HMPPS Auth within a local docker instance.
 ### Running the application in Intellij
 
 ```bash
-docker compose pull && docker compose up --scale dpr-lao-domain-event-processor=0
+docker compose pull && docker compose up --scale digital-prison-reporting-lao-domain-events-processor=0
 ```
 
 will just start a docker instance of HMPPS Auth. The application should then be started with a `dev` active profile

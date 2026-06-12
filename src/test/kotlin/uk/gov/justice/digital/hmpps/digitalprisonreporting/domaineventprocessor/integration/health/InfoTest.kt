@@ -16,7 +16,7 @@ class InfoTest(
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("build.name").isEqualTo("dpr-lao-domain-event-processor")
+      .jsonPath("build.name").isEqualTo("digital-prison-reporting-lao-domain-events-processor")
   }
 
   @Test
