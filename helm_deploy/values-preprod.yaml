@@ -4,7 +4,7 @@ generic-service:
   replicaCount: 2
 
   ingress:
-    host: template-kotlin-preprod.hmpps.service.justice.gov.uk
+    host: digital-prison-reporting-lao-domain-events-processor-preprod.hmpps.service.justice.gov.uk
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"

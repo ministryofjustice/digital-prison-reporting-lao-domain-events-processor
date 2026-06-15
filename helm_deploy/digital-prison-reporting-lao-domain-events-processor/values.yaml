@@ -2,7 +2,7 @@ generic-service:
   nameOverride: digital-prison-reporting-lao-domain-events-processor
   productId: "UNASSIGNED" # productId for the product that this belongs too, i.e. DPS001, see README.md for details
 
-  replicaCount: 4
+  replicaCount: 2
 
   image:
     repository: ghcr.io/ministryofjustice/digital-prison-reporting-lao-domain-events-processor
@@ -18,25 +18,23 @@ generic-service:
   env:
     SERVER_PORT: "8080"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
-    # JAVA_TOOL_OPTIONS is set in the base image (hmpps-eclipse-temurin) with:
-    #   -XX:MaxRAMPercentage=50.0
-    # Uncomment below to override memory settings if needed.
-    # Check resources.limits.memory is set appropriately.
-    #
-    # Percentage-based example:
-    #   JAVA_TOOL_OPTIONS: "-XX:InitialRAMPercentage=50.0 -XX:MaxRAMPercentage=75.0"
-    #
-    # Fixed memory example:
-    #   JAVA_TOOL_OPTIONS: "-Xms512m -Xmx1024m"
-
-  # Pre-existing kubernetes secrets to load as environment variables in the deployment.
-  # namespace_secrets:
-  #   [name of kubernetes secret]:
-  #     [name of environment variable as seen by app]: [key of kubernetes secret to load]
+    JAVA_OPTS: "-Xmx512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp"
+    SERVER_PORT: "8080"
+    SPRING_PROFILES_ACTIVE: "logstash"
+    APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=$(APPINSIGHTS_INSTRUMENTATIONKEY)"
+    APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
+    SENTRY_TRACES_SAMPLE_RATE: '0.05'
+    SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException"
 
   namespace_secrets:
-    hmpps-template-kotlin-application-insights:
+    digital-prison-reporting-lao-domain-events-processor-application-insights:
       APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
+    redshift-jdbc:
+      REDSHIFT_JDBC_USER: "user"
+      REDSHIFT_JDBC_PASSWORD: "password"
+      REDSHIFT_JDBC_URL: "url"
+    redshift-data:
+      REDSHIFT_DATA_SECRETARN: "secretarn"
 
   allowlist:
     groups:
