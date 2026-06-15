@@ -16,6 +16,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("software.amazon.awssdk:redshiftdata:$awsSdkVersion")
+  implementation("com.amazon.redshift:redshift-jdbc4-no-awssdk:1.2.45.1069")
 
   implementation("org.flywaydb:flyway-core")
 
@@ -30,13 +31,18 @@ dependencies {
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
   testImplementation("org.postgresql:postgresql:42.7.11")
   testImplementation("org.testcontainers:localstack:1.21.4")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.5.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.41") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  maven("https://s3.amazonaws.com/redshift-maven-repository/release")
 }
 
 java {
