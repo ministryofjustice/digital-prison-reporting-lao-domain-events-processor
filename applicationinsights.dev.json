@@ -1,6 +1,6 @@
 {
   "role": {
-    "name": "hmpps-template-kotlin"
+    "name": "digital-prison-reporting-lao-domain-events-processor"
   },
   "customDimensions": {
     "service.version": "${BUILD_NUMBER}"

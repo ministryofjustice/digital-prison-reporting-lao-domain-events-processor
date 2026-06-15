@@ -1,15 +1,71 @@
 server:
   shutdown: immediate
 
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/datamart
+    username: test
+    password: test
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      pool-name: Pool-One
+
+  flyway:
+    enabled: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          LAO_DATA:
+            provider: hmpps-auth
+            client-id: ${dpr.lib.api.client.id}
+            client-secret: ${dpr.lib.api.client.secret}
+            authorization-grant-type: client_credentials
+        provider:
+          hmpps-auth:
+            token-uri: ${hmpps.auth.url}/oauth/token
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${hmpps.auth.url}/.well-known/jwks.json
+
 management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0
 
-hmpps-auth:
-  url: "http://localhost:8090/auth"
+hmpps:
+  sqs:
+    provider: localstack
+    queues:
+      inboundqueue:
+        queueName: inbound-queue
+        dlqName: inbound-dlq
+        subscribeTopicId: inboundtopic
+        subscribeFilter: '{"eventType":[ "probation-case.restriction.updated", "probation-case.exclusion.updated"] }'
+    topics:
+      inboundtopic:
+        arn: arn:aws:sns:eu-west-2:000000000000:inbound-topic
+  auth:
+    url: http://localhost:8090/auth
+laodata:
+  host: http://localhost:8082
 
-springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    enabled: true
+logging:
+  level:
+    org:
+      springframework:
+        jdbc:
+          core:
+            StatementCreatorUtils: TRACE
+            JdbcTemplate: TRACE
+
+    org.hibernate.SQL: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor: trace

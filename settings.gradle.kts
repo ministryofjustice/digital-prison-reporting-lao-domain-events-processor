@@ -1,1 +1,1 @@
-rootProject.name = "hmpps-template-kotlin"
+rootProject.name = "digital-prison-reporting-lao-domain-events-processor"

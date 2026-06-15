@@ -1,9 +1,9 @@
 services:
-  hmpps-template-kotlin:
-    image: ghcr.io/ministryofjustice/hmpps-template-kotlin:latest
+  digital-prison-reporting-lao-domain-events-processor:
+    image: ghcr.io/ministryofjustice/digital-prison-reporting-lao-domain-events-processor:latest
     networks:
       - hmpps
-    container_name: hmpps-template-kotlin
+    container_name: digital-prison-reporting-lao-domain-events-processor
     ports:
       - "8080:8080"
     healthcheck:
