@@ -123,7 +123,7 @@ class InboundMessageListener(
     val liveDiffEntry = differencesLive.first()
     val localDiffEntry = differencesLocal.first()
     if (localDiffEntry.crn != liveDiffEntry.crn || localDiffEntry.userId != liveDiffEntry.userId) {
-      throw IllegalArgumentException("The record changed should be for the same user and CRN. Instead, it was for local user ${"foobar"} and crn $localDiffEntry.crn and live user ${"foobar"} and crn $liveDiffEntry.crn")
+      throw IllegalArgumentException("The record changed should be for the same user and CRN. Instead, it was for local user ${localDiffEntry.userId} and crn ${localDiffEntry.crn} and live user ${liveDiffEntry.userId} and crn ${liveDiffEntry.crn}")
     }
     updateLaoEntry(liveDiffEntry, laoDataType)
     return true
