@@ -59,8 +59,24 @@ jobs:
       java-version: "25"
     needs:
       - app_version
+  test_build:
+    name: Build docker image from hmpps-github-actions without pushing
+    if: github.ref != 'refs/heads/main'
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
+    needs:
+      - gradle_verify
+    with:
+      docker_registry: 'ghcr.io'
+      registry_org: 'ministryofjustice'
+      push: false
+      docker_multiplatform: false
+      download_build_artifacts: true
+      generate_sbom: false
+      attach_sbom_to_registry: false
+      sign_image: false
   build:
     name: Build docker image from hmpps-github-actions
+    if: github.ref == 'refs/heads/main'
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
     needs:
       - gradle_verify
@@ -75,7 +91,6 @@ jobs:
       attach_sbom_to_registry: true
       sign_image: true
   deploy_dev:
-    if: github.ref == 'refs/heads/main'
     name: Deploy to the development environment
     needs:
       - build
