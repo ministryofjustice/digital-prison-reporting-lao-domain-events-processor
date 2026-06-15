@@ -26,6 +26,12 @@ generic-service:
     SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException"
 
   namespace_secrets:
+    hmpps-domain-events-topic:
+      HMPPS_SQS_TOPICS_INBOUNDTOPIC_ARN: "topic_arn"
+    sqs-domain-events-secret:
+      INBOUND_QUEUE_NAME: "queue_name"
+    sqs-domain-events-dlq-secret:
+      INBOUND_DLQ_QUEUE_NAME: "queue_name"
     digital-prison-reporting-lao-domain-events-processor-application-insights:
       APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
     redshift-jdbc:

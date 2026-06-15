@@ -50,6 +50,17 @@ server:
   error:
     include-message: always
 
+hmpps:
+  sqs:
+    provider: aws
+    queues:
+      inboundqueue:
+        queueName: ${INBOUND_QUEUE_NAME}
+        dlqName: ${INBOUND_DLQ_QUEUE_NAME}
+    topics:
+      inboundtopic:
+        arn: ${HMPPS_SQS_TOPICS_INBOUNDTOPIC_ARN}
+
 management:
   endpoints:
     web:
@@ -67,6 +78,3 @@ management:
     info:
       cache:
         time-to-live: 2000ms
-
-oauth:
-  endpoint.url: http://localhost:8090/auth
