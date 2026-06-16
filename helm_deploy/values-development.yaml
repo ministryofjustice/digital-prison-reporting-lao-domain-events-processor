@@ -3,6 +3,8 @@
 generic-service:
   replicaCount: 2
 
+  serviceAccountName: "dpr-reporting-mi-development-cross-iam"
+
   ingress:
     host: digital-prison-reporting-lao-domain-events-processor-dev.hmpps.service.justice.gov.uk
 
