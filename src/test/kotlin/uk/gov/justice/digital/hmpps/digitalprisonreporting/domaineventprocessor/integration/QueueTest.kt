@@ -16,6 +16,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.LaoDataType
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class QueueTest : IntegrationTestBase() {
   @Test
@@ -25,8 +27,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Excluded!",
-        LocalDateTime.of(2026, 1, 1, 12, 0, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toExclusion(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -35,15 +37,15 @@ class QueueTest : IntegrationTestBase() {
         "excludedFrom": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:00:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:00:00.000000000+01:00"
           }
         ],
         "restrictedTo": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:00:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:00:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -66,8 +68,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Restricted",
-        LocalDateTime.of(2026, 1, 1, 12, 0, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ),
     )
   }
@@ -79,8 +81,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Excluded!",
-        LocalDateTime.of(2026, 1, 1, 12, 0, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toExclusion(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -89,13 +91,13 @@ class QueueTest : IntegrationTestBase() {
         "excludedFrom": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:00:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:00:00.000000000+01:00"
           },
           {
             "username": "userb",
-            "since": "2026-01-01T12:30:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:30:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -118,16 +120,16 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 0, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
 
     assertThat(exclusions[1].toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Excluded!")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 30, 0), ZoneId.of("+01:00")))
     })
 //    }
   }
@@ -139,8 +141,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Excluded!",
-        LocalDateTime.of(2026, 1, 1, 12, 0, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toExclusion(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -168,8 +170,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Excluded!",
-        LocalDateTime.of(2026, 1, 1, 12, 0, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toExclusion(),
     )
     laoRestrictionRepository.saveAndFlush(
@@ -177,8 +179,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Restricted",
-        LocalDateTime.of(2026, 1, 1, 12, 0, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toRestriction(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -187,8 +189,8 @@ class QueueTest : IntegrationTestBase() {
         "excludedFrom": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:00:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:00:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -212,8 +214,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Restricted",
-        LocalDateTime.of(2026, 1, 1, 12, 0, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toRestriction(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -222,8 +224,8 @@ class QueueTest : IntegrationTestBase() {
         "restrictedTo": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -243,8 +245,8 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 0, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 30, 0), ZoneId.of("+01:00")))
     })
   }
 
@@ -255,8 +257,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Excluded!",
-        LocalDateTime.of(2026, 1, 1, 12, 0, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toExclusion(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -265,8 +267,8 @@ class QueueTest : IntegrationTestBase() {
         "excludedFrom": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -286,8 +288,8 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 0, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 30, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 30, 0), ZoneId.of("+01:00")))
     })
   }
 
@@ -299,13 +301,13 @@ class QueueTest : IntegrationTestBase() {
         "excludedFrom": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           },
           {
             "username": "userb",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -329,13 +331,13 @@ class QueueTest : IntegrationTestBase() {
         "restrictedTo": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           },
           {
             "username": "userb",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -359,15 +361,15 @@ class QueueTest : IntegrationTestBase() {
         "restrictedTo": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "excludedFrom": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:00:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:00:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -391,15 +393,15 @@ class QueueTest : IntegrationTestBase() {
           "A111111",
           "usera",
           "Restricted",
-          LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-          LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
         ).toRestriction(),
         LaoEntry(
           "A111111",
           "userb",
           "Restricted",
-          LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-          LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
         ).toRestriction(),
       ),
     )
@@ -409,13 +411,13 @@ class QueueTest : IntegrationTestBase() {
         "restrictedTo": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:30:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:30:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           },
           {
             "username": "userb",
-            "since": "2026-01-01T12:30:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:30:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -434,15 +436,15 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
     assertThat(restrictions[1].toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Restricted")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
   }
 
@@ -454,15 +456,15 @@ class QueueTest : IntegrationTestBase() {
           "A111111",
           "usera",
           "Excluded!",
-          LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-          LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
         ).toExclusion(),
         LaoEntry(
           "A111111",
           "userb",
           "Excluded!",
-          LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-          LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
         ).toExclusion(),
       ),
     )
@@ -472,13 +474,13 @@ class QueueTest : IntegrationTestBase() {
         "excludedFrom": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:30:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:30:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           },
           {
             "username": "userb",
-            "since": "2026-01-01T12:30:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:30:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -499,15 +501,15 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
     assertThat(exclusions[1].toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Excluded!")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
   }
 
@@ -518,8 +520,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Excluded!",
-        LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toExclusion(),
     )
     laoRestrictionRepository.saveAndFlush(
@@ -527,8 +529,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Restricted",
-        LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toRestriction(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -537,15 +539,15 @@ class QueueTest : IntegrationTestBase() {
         "restrictedTo": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:30:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:30:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "excludedFrom": [
           {
             "username": "usera",
-            "since": "2026-01-01T12:30:00",
-            "until": "2026-01-01T13:30:00"
+            "since": "2026-01-01T12:30:00.000000000+01:00",
+            "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
         "exclusionMessage": "Excluded!",
@@ -563,8 +565,8 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
     assertThat(restrictions.size).isEqualTo(1)
@@ -572,8 +574,8 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
   }
 
@@ -585,15 +587,15 @@ class QueueTest : IntegrationTestBase() {
           "A111111",
           "usera",
           "Restricted",
-          LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-          LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
         ).toRestriction(),
         LaoEntry(
           "A111111",
           "userb",
           "Restricted",
-          LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-          LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
         ).toRestriction(),
       ),
     )
@@ -616,15 +618,15 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
     assertThat(restrictions[1].toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Restricted")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
   }
 
@@ -636,15 +638,15 @@ class QueueTest : IntegrationTestBase() {
           "A111111",
           "usera",
           "Excluded!",
-          LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-          LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
         ).toExclusion(),
         LaoEntry(
           "A111111",
           "userb",
           "Excluded!",
-          LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-          LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
         ).toExclusion(),
       ),
     )
@@ -667,15 +669,15 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
     assertThat(exclusions[1].toLaoEntry()).satisfies({
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("userb")
       assertThat(it.reason).isEqualTo("Excluded!")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
   }
 
@@ -686,8 +688,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Excluded!",
-        LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toExclusion(),
     )
     laoRestrictionRepository.saveAndFlush(
@@ -695,8 +697,8 @@ class QueueTest : IntegrationTestBase() {
         "A111111",
         "usera",
         "Restricted",
-        LocalDateTime.of(2026, 1, 1, 12, 30, 0),
-        LocalDateTime.of(2026, 1, 1, 13, 0, 0),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+        ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
       ).toRestriction(),
     )
     probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
@@ -717,8 +719,8 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Excluded!")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
     assertThat(restrictions.size).isEqualTo(1)
@@ -726,8 +728,8 @@ class QueueTest : IntegrationTestBase() {
       assertThat(it.crn).isEqualTo("A111111")
       assertThat(it.userId).isEqualTo("usera")
       assertThat(it.reason).isEqualTo("Restricted")
-      assertThat(it.since).isEqualTo(LocalDateTime.of(2026, 1, 1, 12, 30, 0))
-      assertThat(it.until).isEqualTo(LocalDateTime.of(2026, 1, 1, 13, 0, 0))
+      assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+      assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
     })
   }
 

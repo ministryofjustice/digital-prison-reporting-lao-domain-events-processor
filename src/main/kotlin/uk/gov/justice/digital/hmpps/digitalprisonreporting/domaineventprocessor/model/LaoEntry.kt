@@ -2,14 +2,14 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusion
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestriction
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 data class LaoEntry(
   val crn: String,
   val userId: String,
   val reason: String?,
-  val since: LocalDateTime,
-  val until: LocalDateTime?,
+  val since: ZonedDateTime,
+  val until: ZonedDateTime?,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

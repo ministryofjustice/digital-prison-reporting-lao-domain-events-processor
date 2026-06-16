@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.LaoEntry
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 @Repository
 interface LaoRestrictionRepository : JpaRepository<LaoRestriction, Long> {
@@ -33,8 +33,8 @@ data class LaoRestriction(
   val crn: String,
   val userId: String,
   val reason: String?,
-  val since: LocalDateTime,
-  val until: LocalDateTime?,
+  val since: ZonedDateTime,
+  val until: ZonedDateTime?,
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   val id: Long?,

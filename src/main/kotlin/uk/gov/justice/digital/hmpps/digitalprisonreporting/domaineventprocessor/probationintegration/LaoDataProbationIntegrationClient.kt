@@ -9,7 +9,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.util.retry.Retry
 import java.io.IOException
 import java.time.Duration
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 class LaoDataProbationIntegrationClient(
   private val laoDataProbationIntegrationClient: WebClient,
@@ -45,8 +45,8 @@ class LaoDataProbationIntegrationClient(
 
 data class LaoApiDataEntry(
   val username: String,
-  val since: LocalDateTime,
-  val until: LocalDateTime?,
+  val since: ZonedDateTime,
+  val until: ZonedDateTime?,
 )
 
 data class LaoDataResponse(
