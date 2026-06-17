@@ -29,6 +29,7 @@ class InboundMessageListener(
   @Transactional
   fun processMessage(message: SnsMessage) {
     val event: LAOEvent = jsonMapper.readValue(message.message)
+
     val identifiers = event.personReference.identifiers
     if (identifiers.size != 1) {
       throw IllegalArgumentException("List of identifiers had ${identifiers.size} length instead of 1")
@@ -36,10 +37,12 @@ class InboundMessageListener(
     if (identifiers.first().type.lowercase() != "crn") {
       return
     }
+
     val crn = identifiers.first().value
     if (crn.isBlank()) {
       throw IllegalArgumentException("CRN value was blank")
     }
+
     val liveLaoData = laoDataProbationIntegrationClient.getLaoData(crn)
     val liveLaoDataTransformedExclusions = liveLaoData.excludedFrom.map { LaoExclusion(crn, it.username, liveLaoData.exclusionMessage, it.since, it.until, null) }
     val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoRestriction(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until, null) }
@@ -67,11 +70,6 @@ data class LAOEvent(
     )
   }
 }
-
-data class LaoData(
-  val exclusions: List<LaoEntry>,
-  val restrictions: List<LaoEntry>,
-)
 
 enum class LaoDataType {
   Restriction,

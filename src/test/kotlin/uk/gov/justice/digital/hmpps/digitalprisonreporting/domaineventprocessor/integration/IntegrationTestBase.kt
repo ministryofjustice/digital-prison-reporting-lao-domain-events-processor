@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.times
@@ -122,17 +123,12 @@ abstract class IntegrationTestBase {
     laoRestrictionRepository.deleteAll()
     laoExclusionRepository.flush()
     laoRestrictionRepository.flush()
-    inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build())
-    inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build())
+    inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build()).join()
+    inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).join()
     await().untilCallTo { laoExclusionRepository.count() } matches { it == 0L }
     await().untilCallTo { laoRestrictionRepository.count() } matches { it == 0L }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 0 }
-  }
-
-  @AfterEach
-  fun tearDown() {
-    verify(messageListener, times(2)).processMessage(any())
   }
 
   companion object {

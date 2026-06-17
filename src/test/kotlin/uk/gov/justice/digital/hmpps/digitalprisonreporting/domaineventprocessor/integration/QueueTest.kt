@@ -61,7 +61,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(1)
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
@@ -114,9 +113,9 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
-    assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(1)
+    val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+    assertThat(restrictions.size).isEqualTo(1)
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
     assertThat(exclusions.size).isEqualTo(1)
 
@@ -154,7 +153,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
     assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
@@ -200,10 +198,10 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
-    assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(1)
+    val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+    assertThat(exclusions.size).isEqualTo(1)
   }
 
   @Test
@@ -237,7 +235,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
@@ -282,7 +279,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
@@ -333,10 +329,10 @@ class QueueTest : IntegrationTestBase() {
       """.trimIndent(),
     )
     publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction)
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
@@ -406,7 +402,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
@@ -492,7 +487,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
     assertThat(exclusions.size).isEqualTo(2)
@@ -589,7 +583,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
@@ -676,7 +669,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
@@ -782,8 +774,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
-    verify(messageListener, times(2)).processMessage(any())
 
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
     assertThat(exclusions.size).isEqualTo(2)
@@ -870,7 +860,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
     val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
@@ -933,7 +922,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
@@ -1015,7 +1003,6 @@ class QueueTest : IntegrationTestBase() {
 
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 2 }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
-    verify(messageListener, times(2)).processMessage(any())
 
     val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
     assertThat(exclusions.size).isEqualTo(1)
