@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -18,16 +19,16 @@ interface LaoExclusionRepository : JpaRepository<LaoExclusion, Long> {
   fun getLaoExclusionsForCrn(crn: String): List<LaoExclusion>
 
   @Modifying
-  @Query("DELETE FROM LaoExclusion e WHERE e.crn = :crn AND e.userId = :userId")
-  fun deleteExclusionLaoEntry(crn: String, userId: String)
-
-  @Modifying
-  @Query("UPDATE LaoExclusion e SET e.crn = :#{#laoEntry.crn}, e.userId = :#{#laoEntry.userId}, e.reason = :#{#laoEntry.reason}, e.since = :#{#laoEntry.since}, e.until = :#{#laoEntry.until} WHERE e.crn = :#{#laoEntry.crn}")
-  fun updateExclusionLaoEntry(laoEntry: LaoEntry)
+  @Query("DELETE FROM LaoExclusion e WHERE e.crn = :crn")
+  fun deleteAllForCrn(crn: String)
 }
 
 @Entity
-@Table(name = "lao_exclusions", schema = "product_")
+@Table(
+  name = "lao_exclusions",
+  schema = "product_",
+  uniqueConstraints = [UniqueConstraint(columnNames = ["crn", "userId"])]
+)
 data class LaoExclusion(
   val crn: String,
   val userId: String,

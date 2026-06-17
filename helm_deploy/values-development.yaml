@@ -1,8 +1,6 @@
 ---
 
 generic-service:
-  replicaCount: 2
-
   serviceAccountName: "dpr-reporting-mi-development-cross-iam"
 
   ingress:

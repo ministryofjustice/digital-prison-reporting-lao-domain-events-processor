@@ -2,7 +2,7 @@ generic-service:
   nameOverride: digital-prison-reporting-lao-domain-events-processor
   productId: "UNASSIGNED" # productId for the product that this belongs too, i.e. DPS001, see README.md for details
 
-  replicaCount: 2
+  replicaCount: 1
 
   image:
     repository: ghcr.io/ministryofjustice/digital-prison-reporting-lao-domain-events-processor

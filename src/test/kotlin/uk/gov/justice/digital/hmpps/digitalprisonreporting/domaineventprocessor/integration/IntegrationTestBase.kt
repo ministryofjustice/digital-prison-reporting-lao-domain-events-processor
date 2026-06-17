@@ -1,15 +1,21 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
+import io.awspring.cloud.sqs.listener.MessageListener
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.test.runTest
 import org.awaitility.Awaitility.await
+import org.awaitility.kotlin.has
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito.verify
+import org.mockito.kotlin.any
+import org.mockito.kotlin.times
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
@@ -30,6 +36,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.InboundMessageListener
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ProbationIntegrationLaoMockServer
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
@@ -82,6 +89,9 @@ abstract class IntegrationTestBase {
   protected lateinit var hmppsSqsPropertiesSpy: HmppsSqsProperties
 
   @MockitoSpyBean
+  protected lateinit var messageListener: InboundMessageListener
+
+  @MockitoSpyBean
   protected lateinit var telemetryClient: TelemetryClient
 
   @Autowired
@@ -99,31 +109,30 @@ abstract class IntegrationTestBase {
 
   protected fun jsonString(any: Any): String? = jsonMapper.writeValueAsString(any)
 
-  protected fun messageAttributesWithEventType(eventType: String): MessageAttributes = MessageAttributes().apply {
-    put("eventType", MessageAttribute("String", eventType))
-  }
-
   internal fun setAuthorisation(
     username: String? = "AUTH_ADM",
     roles: List<String> = listOf(),
     scopes: List<String> = listOf("read"),
   ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(username = username, scope = scopes, roles = roles)
 
-  protected fun stubPingWithResponse(status: Int) {
-    hmppsAuth.stubHealthPing(status)
-  }
-
   @BeforeEach
-  fun setup() = runTest {
+  fun setup()  {
     probationIntegrationLaoMockServer.resetAll()
     laoExclusionRepository.deleteAll()
     laoRestrictionRepository.deleteAll()
     laoExclusionRepository.flush()
     laoRestrictionRepository.flush()
-    inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build()).await()
-    inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).await()
+    inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build())
+    inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build())
+    await().untilCallTo { laoExclusionRepository.count() } matches { it == 0L }
+    await().untilCallTo { laoRestrictionRepository.count() } matches { it == 0L }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 0 }
+  }
+
+  @AfterEach
+  fun tearDown() {
+    verify(messageListener, times(2)).processMessage(any())
   }
 
   companion object {
