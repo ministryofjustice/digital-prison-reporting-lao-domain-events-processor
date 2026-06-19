@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.listener.MessageListener
+import jakarta.persistence.EntityManager
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.test.runTest
 import org.awaitility.Awaitility.await
@@ -31,6 +32,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrn
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrnRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestrictionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.mocks.OAuthExtension
@@ -60,6 +63,7 @@ abstract class IntegrationTestBase {
   fun HmppsSqsProperties.inboundTopicConfig() = topics["inboundtopic"] ?: throw MissingTopicException("inboundtopic has not been loaded from configuration properties")
 
   protected val inboundQueue by lazy { hmppsQueueService.findByQueueId("inboundqueue") ?: throw MissingQueueException("HmppsQueue inboundqueue not found") }
+  protected val inboundQueueDlq by lazy { hmppsQueueService.findByQueueName("inbound-dlq") ?: throw MissingQueueException("InboundDlq does not exist") }
   private val inboundTopic by lazy { hmppsQueueService.findByTopicId("inboundtopic") ?: throw MissingQueueException("HmppsTopic inboundtopic not found") }
 
   protected val inboundSqsClient by lazy { inboundQueue.sqsClient }
@@ -85,6 +89,12 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var laoRestrictionRepository: LaoRestrictionRepository
+
+  @Autowired
+  protected lateinit var entityManager: EntityManager
+
+  @MockitoSpyBean
+  protected lateinit var laoCrnRepository: LaoCrnRepository
 
   @MockitoSpyBean
   protected lateinit var hmppsSqsPropertiesSpy: HmppsSqsProperties
@@ -118,11 +128,10 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun setup()  {
-    probationIntegrationLaoMockServer.resetAll()
-    laoExclusionRepository.deleteAll()
+    laoCrnRepository.deleteAll()
     laoRestrictionRepository.deleteAll()
-    laoExclusionRepository.flush()
-    laoRestrictionRepository.flush()
+    laoExclusionRepository.deleteAll()
+    probationIntegrationLaoMockServer.resetAll()
     inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build()).join()
     inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).join()
     await().untilCallTo { laoExclusionRepository.count() } matches { it == 0L }

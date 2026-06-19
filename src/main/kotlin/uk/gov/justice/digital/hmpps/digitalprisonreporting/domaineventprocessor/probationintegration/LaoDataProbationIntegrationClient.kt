@@ -52,6 +52,6 @@ data class LaoApiDataEntry(
 data class LaoDataResponse(
   val excludedFrom: List<LaoApiDataEntry> = emptyList(),
   val restrictedTo: List<LaoApiDataEntry> = emptyList(),
-  val exclusionMessage: String?,
-  val restrictionMessage: String?,
+  val exclusionMessage: String,
+  val restrictionMessage: String,
 )

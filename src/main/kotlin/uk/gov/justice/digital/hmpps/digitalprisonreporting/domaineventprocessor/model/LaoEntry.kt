@@ -27,5 +27,5 @@ data class LaoEntry(
     return result
   }
 }
-fun LaoEntry.toExclusion() = LaoExclusion(crn, userId, reason, since, until, null)
-fun LaoEntry.toRestriction() = LaoRestriction(crn, userId, reason, since, until, null)
+fun LaoEntry.toExclusion() = LaoExclusion(crn, userId, reason, since, until, "$crn:$userId")
+fun LaoEntry.toRestriction() = LaoRestriction(crn, userId, reason, since, until, "$crn:$userId")

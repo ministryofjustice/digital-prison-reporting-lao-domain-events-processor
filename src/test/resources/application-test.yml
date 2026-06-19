@@ -45,6 +45,8 @@ hmpps:
     provider: localstack
     queues:
       inboundqueue:
+        dlqMaxReceiveCount: 1
+        visibilityTimeout: 10
         queueName: inbound-queue
         dlqName: inbound-dlq
         subscribeTopicId: inboundtopic

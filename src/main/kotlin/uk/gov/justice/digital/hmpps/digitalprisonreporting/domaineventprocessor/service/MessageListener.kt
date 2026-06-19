@@ -1,24 +1,16 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service
 
 import io.awspring.cloud.sqs.annotation.SqsListener
-import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusion
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestriction
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestrictionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.LaoEntry
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.probationintegration.LaoDataProbationIntegrationClient
 import uk.gov.justice.hmpps.sqs.SnsMessage
 import java.time.LocalDateTime
 
 @Service
 class InboundMessageListener(
-  private val laoExclusionRepository: LaoExclusionRepository,
-  private val laoRestrictionRepository: LaoRestrictionRepository,
-  private val laoDataProbationIntegrationClient: LaoDataProbationIntegrationClient,
+  private val laoDataUpdateService: LaoDataUpdateService,
+  private val laoCrnInitialisationService: LaoCrnInitialisationService,
   private val jsonMapper: JsonMapper,
 ) {
   /**
@@ -26,7 +18,6 @@ class InboundMessageListener(
    * Ensure that there is exactly one change
    */
   @SqsListener("inboundqueue", factory = "hmppsQueueContainerFactoryProxy")
-  @Transactional
   fun processMessage(message: SnsMessage) {
     val event: LAOEvent = jsonMapper.readValue(message.message)
 
@@ -43,14 +34,8 @@ class InboundMessageListener(
       throw IllegalArgumentException("CRN value was blank")
     }
 
-    val liveLaoData = laoDataProbationIntegrationClient.getLaoData(crn)
-    val liveLaoDataTransformedExclusions = liveLaoData.excludedFrom.map { LaoExclusion(crn, it.username, liveLaoData.exclusionMessage, it.since, it.until, null) }
-    val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoRestriction(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until, null) }
-
-    laoExclusionRepository.deleteAllForCrn(crn)
-    laoRestrictionRepository.deleteAllForCrn(crn)
-    laoExclusionRepository.saveAll(liveLaoDataTransformedExclusions)
-    laoRestrictionRepository.saveAll(liveLaoDataTransformedRestrictions)
+    laoCrnInitialisationService.insertCrnIfNeeded(crn)
+    laoDataUpdateService.process(crn)
   }
 }
 
