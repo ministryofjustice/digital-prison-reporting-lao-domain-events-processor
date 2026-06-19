@@ -15,13 +15,13 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-interface   LaoCrnRepository: JpaRepository<LaoCrn, Long> {
+interface LaoCrnRepository : JpaRepository<LaoCrn, Long> {
   fun findByCrn(crn: String): Collection<LaoCrn>
 }
 
 @Entity
 @Table(name = "lao_crns", schema = "product_")
-class LaoCrn (
+class LaoCrn(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   val id: Long?,
@@ -39,7 +39,7 @@ class LaoCrn (
   @JoinColumn(name = "crn", referencedColumnName = "crn")
   val laoRestrictions: MutableSet<LaoRestriction>,
 
-  var lastUpdated: LocalDateTime = LocalDateTime.now()
+  var lastUpdated: LocalDateTime = LocalDateTime.now(),
 ) {
   fun addExclusions(laoExclusions: Collection<LaoExclusion>) {
     this.laoExclusions.clear()

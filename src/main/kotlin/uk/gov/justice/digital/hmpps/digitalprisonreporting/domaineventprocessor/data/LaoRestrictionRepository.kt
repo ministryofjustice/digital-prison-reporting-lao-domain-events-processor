@@ -19,7 +19,7 @@ interface LaoRestrictionRepository : JpaRepository<LaoRestriction, String> {
 @Entity
 @Table(
   name = "lao_restrictions",
-  schema = "product_"
+  schema = "product_",
 )
 class LaoRestriction(
   val crn: String,
@@ -39,8 +39,6 @@ class LaoRestriction(
     return true
   }
 
-  override fun hashCode(): Int {
-    return crnUserId.hashCode()
-  }
+  override fun hashCode(): Int = crnUserId.hashCode()
 }
 fun LaoRestriction.toLaoEntry() = LaoEntry(crn, userId, reason, since, until)

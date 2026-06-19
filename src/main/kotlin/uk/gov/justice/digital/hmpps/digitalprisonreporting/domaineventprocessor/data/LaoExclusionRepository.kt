@@ -38,8 +38,6 @@ class LaoExclusion(
     return true
   }
 
-  override fun hashCode(): Int {
-    return crnUserId.hashCode()
-  }
+  override fun hashCode(): Int = crnUserId.hashCode()
 }
 fun LaoExclusion.toLaoEntry() = LaoEntry(crn, userId, reason, since, until)

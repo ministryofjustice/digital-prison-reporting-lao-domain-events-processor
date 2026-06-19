@@ -1,21 +1,15 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration
 
 import com.microsoft.applicationinsights.TelemetryClient
-import io.awspring.cloud.sqs.listener.MessageListener
 import jakarta.persistence.EntityManager
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.test.runTest
 import org.awaitility.Awaitility.await
-import org.awaitility.kotlin.has
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito
-import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,20 +26,16 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrn
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrnRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestrictionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.mocks.OAuthExtension
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer.setLocalStackProperties
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.wiremock.HmppsAuthApiExtension.Companion.hmppsAuth
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.InboundMessageListener
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ProbationIntegrationLaoMockServer
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
-import uk.gov.justice.hmpps.sqs.MessageAttribute
-import uk.gov.justice.hmpps.sqs.MessageAttributes
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.MissingTopicException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
@@ -127,7 +117,7 @@ abstract class IntegrationTestBase {
   ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(username = username, scope = scopes, roles = roles)
 
   @BeforeEach
-  fun setup()  {
+  fun setup() {
     laoCrnRepository.deleteAll()
     laoRestrictionRepository.deleteAll()
     laoExclusionRepository.deleteAll()
