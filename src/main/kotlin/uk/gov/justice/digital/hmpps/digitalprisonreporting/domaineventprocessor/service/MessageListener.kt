@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.hmpps.sqs.SnsMessage
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 @Service
 class InboundMessageListener(
@@ -43,7 +43,7 @@ data class LAOEvent(
   val eventType: String,
   val version: Int,
   val description: String,
-  val occurredAt: LocalDateTime,
+  val occurredAt: ZonedDateTime,
   val personReference: PersonReference,
 ) {
   data class PersonReference(
