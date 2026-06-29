@@ -1658,7 +1658,7 @@ class QueueTest : IntegrationTestBase() {
       "probation-case.${type.name.lowercase()}.updated",
       1,
       description,
-      LocalDateTime.now(),
+      ZonedDateTime.now(),
       LAOEvent.PersonReference(
         listOf(
           LAOEvent.PersonReference.Identifier("CRN", crn),
