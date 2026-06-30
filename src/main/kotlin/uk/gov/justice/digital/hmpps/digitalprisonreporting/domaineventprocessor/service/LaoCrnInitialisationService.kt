@@ -12,7 +12,7 @@ class LaoCrnInitialisationService(
     val crns = laoCrnRepository.findByCrn(crn)
     when (crns.size) {
       0 -> {
-        laoCrnRepository.save(LaoCrn(null, crn, 0, mutableSetOf(), mutableSetOf()))
+        laoCrnRepository.save(LaoCrn(crn = crn, version = 0, laoRestrictions =  mutableSetOf(), laoExclusions =   mutableSetOf()))
         deleteExtraCrns(laoCrnRepository.findByCrn(crn))
       }
       1 -> return
