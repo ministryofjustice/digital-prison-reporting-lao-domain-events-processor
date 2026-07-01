@@ -29,9 +29,9 @@ spring:
         registration:
           LAO_DATA:
             provider: hmpps-auth
-            client-id: ${dpr.lib.api.client.id}
-            client-secret: ${dpr.lib.api.client.secret}
             authorization-grant-type: client_credentials
+            client-id: ${API_CLIENT_CREDENTIALS_ID}
+            client-secret: ${API_CLIENT_CREDENTIALS_SECRET}
         provider:
           hmpps-auth:
             token-uri: ${hmpps.auth.url}/oauth/token

@@ -26,6 +26,9 @@ generic-service:
     SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException"
 
   namespace_secrets:
+    digital-prison-reporting-lao-domain-events-processor-client-creds:
+      API_CLIENT_CREDENTIALS_ID: "api_client_credentials_id"
+      API_CLIENT_CREDENTIALS_SECRET: "api_client_credentials_secret"
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_INBOUNDTOPIC_ARN: "topic_arn"
     sqs-domain-events-secret:
