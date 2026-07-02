@@ -3,6 +3,9 @@
 generic-service:
   serviceAccountName: "dpr-reporting-mi-preprod-cross-iam"
 
+  ingress:
+    host: dpr-lao-domain-events-processor-preprod.hmpps.service.justice.gov.uk
+
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
     HMPPS_AUTH_URL: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
