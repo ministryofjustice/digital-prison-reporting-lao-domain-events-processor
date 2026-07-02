@@ -3,9 +3,6 @@
 generic-service:
   serviceAccountName: "dpr-reporting-mi-development-cross-iam"
 
-  ingress:
-    host: digital-prison-reporting-lao-domain-events-processor-dev.hmpps.service.justice.gov.uk
-
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
     HMPPS_AUTH_URL: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
