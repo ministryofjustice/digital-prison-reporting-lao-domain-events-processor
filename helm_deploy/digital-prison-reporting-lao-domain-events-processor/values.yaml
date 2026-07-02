@@ -1,6 +1,6 @@
 generic-service:
   nameOverride: digital-prison-reporting-lao-domain-events-processor
-  productId: "UNASSIGNED" # productId for the product that this belongs too, i.e. DPS001, see README.md for details
+  productId: "DPS012" # productId for the product that this belongs too, i.e. DPS001, see README.md for details
 
   replicaCount: 1
 
@@ -19,11 +19,11 @@ generic-service:
     SERVER_PORT: "8080"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     JAVA_OPTS: "-Xmx512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp"
-    SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
-    APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     SENTRY_TRACES_SAMPLE_RATE: '0.05'
     SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException"
+    SPRINGDOC_API-DOCS_ENABLED: "false"
+    SPRINGDOC_SWAGGER-UI_ENABLED: "false"
 
   namespace_secrets:
     digital-prison-reporting-lao-domain-events-processor-client-creds:

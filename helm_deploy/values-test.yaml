@@ -4,7 +4,7 @@ generic-service:
   serviceAccountName: "dpr-reporting-mi-development-cross-iam"
 
   ingress:
-    host: digital-prison-reporting-lao-domain-events-processor-dev.hmpps.service.justice.gov.uk
+    host: digital-prison-reporting-lao-domain-events-processor-test.hmpps.service.justice.gov.uk
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
@@ -14,4 +14,4 @@ generic-service:
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
-  alertSeverity: digital-prison-reporting-dev
+  alertSeverity: digital-prison-reporting-test
