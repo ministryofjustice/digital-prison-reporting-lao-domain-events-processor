@@ -1,7 +1,7 @@
 ---
 
 generic-service:
-  serviceAccountName: "dpr-reporting-mi-development-cross-iam"
+  serviceAccountName: "dpr-reporting-mi-test-cross-iam"
 
   ingress:
     host: dpr-lao-domain-events-processor-test.hmpps.service.justice.gov.uk
