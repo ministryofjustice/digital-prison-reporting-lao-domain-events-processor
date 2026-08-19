@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service
 
 import io.awspring.cloud.sqs.annotation.SqsListener
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
@@ -13,12 +14,21 @@ class InboundMessageListener(
   private val laoCrnInitialisationService: LaoCrnInitialisationService,
   private val jsonMapper: JsonMapper,
 ) {
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
   /**
    * Get the LAO event and check to see if it's an addition, removal, or a change in an existing entry.
    * Ensure that there is exactly one change
    */
   @SqsListener("inboundqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(message: SnsMessage) {
+    log.info(
+      "messageId={}, thread={}",
+        message.messageId,
+        Thread.currentThread().name
+    )
     val event: LAOEvent = jsonMapper.readValue(message.message)
 
     val crnIdentifiers = event.personReference.identifiers.filter { it.type == "CRN" }
