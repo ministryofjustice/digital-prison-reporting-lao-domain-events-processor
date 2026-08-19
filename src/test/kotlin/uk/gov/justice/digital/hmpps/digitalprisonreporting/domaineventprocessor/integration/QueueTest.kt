@@ -674,7 +674,6 @@ class QueueTest : IntegrationTestBase() {
             "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
-        "exclusionMessage": "Excluded!",
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
@@ -773,8 +772,7 @@ class QueueTest : IntegrationTestBase() {
             "until": "2026-01-01T13:30:00.000000000+01:00"
           }
         ],
-        "exclusionMessage": "Excluded!",
-        "restrictionMessage": "Restricted"
+        "exclusionMessage": "Excluded!"
       }
       """.trimIndent(),
     )

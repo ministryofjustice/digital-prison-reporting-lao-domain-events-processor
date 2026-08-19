@@ -18,7 +18,7 @@ class LaoDataProbationIntegrationClient(
     .uri("/case/$crn/access")
     .header("Content-Type", "application/json")
     .retrieve()
-    .bodyToMono<LaoDataResponse>(LaoDataResponse::class.java)
+    .bodyToMono(LaoDataResponse::class.java)
     .retryWhen(retryWithExponentialBackOffAndJitter)
     .block()!!
 
@@ -52,6 +52,6 @@ data class LaoApiDataEntry(
 data class LaoDataResponse(
   val excludedFrom: List<LaoApiDataEntry> = emptyList(),
   val restrictedTo: List<LaoApiDataEntry> = emptyList(),
-  val exclusionMessage: String,
-  val restrictionMessage: String,
+  val exclusionMessage: String?,
+  val restrictionMessage: String?,
 )
