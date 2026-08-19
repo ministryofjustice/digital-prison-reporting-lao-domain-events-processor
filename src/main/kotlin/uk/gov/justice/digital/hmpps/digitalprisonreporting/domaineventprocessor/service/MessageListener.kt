@@ -21,15 +21,15 @@ class InboundMessageListener(
   fun processMessage(message: SnsMessage) {
     val event: LAOEvent = jsonMapper.readValue(message.message)
 
-    val identifiers = event.personReference.identifiers
-    if (identifiers.size != 1) {
-      throw IllegalArgumentException("List of identifiers had ${identifiers.size} length instead of 1")
+    val crnIdentifiers = event.personReference.identifiers.filter { it.type == "CRN" }
+    if (crnIdentifiers.size != 1) {
+      throw IllegalArgumentException("List of identifiers had ${crnIdentifiers.size} CRN identifiers instead of 1")
     }
-    if (identifiers.first().type.lowercase() != "crn") {
+    if (crnIdentifiers.first().type.lowercase() != "crn") {
       return
     }
 
-    val crn = identifiers.first().value
+    val crn = crnIdentifiers.first().value
     if (crn.isBlank()) {
       throw IllegalArgumentException("CRN value was blank")
     }
