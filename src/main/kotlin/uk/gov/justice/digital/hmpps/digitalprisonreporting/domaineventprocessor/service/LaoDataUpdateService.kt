@@ -19,8 +19,12 @@ class LaoDataUpdateService(
     val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoRestriction(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until, "$crn:${it.username}") }
 
     val laoCrn = laoCrnRepository.findByCrn(crn).single()
-    laoCrn.addExclusions(liveLaoDataTransformedExclusions)
-    laoCrn.addRestrictions(liveLaoDataTransformedRestrictions)
+    if (liveLaoDataTransformedExclusions.isNotEmpty()) {
+      laoCrn.addExclusions(liveLaoDataTransformedExclusions)
+    }
+    if (liveLaoDataTransformedRestrictions.isNotEmpty()) {
+      laoCrn.addRestrictions(liveLaoDataTransformedRestrictions)
+    }
 
     laoCrnRepository.save(laoCrn)
   }
