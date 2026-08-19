@@ -3,6 +3,10 @@ info.app:
   version: 1.0
 
 spring:
+  jpa:
+    properties:
+      hibernate:
+        generate_statistics: true
   application:
     name: digital-prison-reporting-lao-domain-events-processor
   codec:
@@ -78,3 +82,9 @@ management:
     info:
       cache:
         time-to-live: 2000ms
+
+logging:
+  level:
+    org.hibernate.stat: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

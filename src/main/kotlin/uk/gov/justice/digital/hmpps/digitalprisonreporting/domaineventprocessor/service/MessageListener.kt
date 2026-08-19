@@ -29,6 +29,7 @@ class InboundMessageListener(
         message.messageId,
         Thread.currentThread().name
     )
+    val started = System.currentTimeMillis()
     val event: LAOEvent = jsonMapper.readValue(message.message)
 
     val crnIdentifiers = event.personReference.identifiers.filter { it.type == "CRN" }
@@ -46,6 +47,18 @@ class InboundMessageListener(
 
     laoCrnInitialisationService.insertCrnIfNeeded(crn)
     laoDataUpdateService.process(crn)
+
+    log.info(
+      "process({}) took {}ms",
+        crn,
+        System.currentTimeMillis() - started,
+    )
+    log.info(
+      "Finished message processing. messageId={}, crn={}, thread={}",
+      message.messageId,
+      crn,
+      Thread.currentThread().name,
+    )
   }
 }
 
