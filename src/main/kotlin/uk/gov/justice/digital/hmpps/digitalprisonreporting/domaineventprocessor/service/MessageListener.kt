@@ -18,6 +18,7 @@ class InboundMessageListener(
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
+
   /**
    * Get the LAO event and check to see if it's an addition, removal, or a change in an existing entry.
    * Ensure that there is exactly one change
@@ -26,8 +27,8 @@ class InboundMessageListener(
   fun processMessage(message: SnsMessage) {
     log.info(
       "messageId={}, thread={}",
-        message.messageId,
-        Thread.currentThread().name
+      message.messageId,
+      Thread.currentThread().name,
     )
     val started = System.currentTimeMillis()
     val event: LAOEvent = jsonMapper.readValue(message.message)
@@ -50,8 +51,8 @@ class InboundMessageListener(
 
     log.info(
       "process({}) took {}ms",
-        crn,
-        System.currentTimeMillis() - started,
+      crn,
+      System.currentTimeMillis() - started,
     )
     log.info(
       "Finished message processing. messageId={}, crn={}, thread={}",
