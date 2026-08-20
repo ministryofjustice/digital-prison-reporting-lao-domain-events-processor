@@ -32,7 +32,7 @@ class LaoRestriction(
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    if (other !is LaoExclusion) return false
+    if (other !is LaoRestriction) return false
 
     if (crnUserId != other.crnUserId) return false
 
