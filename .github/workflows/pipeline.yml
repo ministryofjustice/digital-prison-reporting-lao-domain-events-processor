@@ -105,7 +105,7 @@ jobs:
     name: Deploy to test environment
     needs:
       - build
-      - deploy_dev
+      - helm_lint
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
@@ -116,7 +116,7 @@ jobs:
     name: Deploy to pre-production environment
     needs:
       - build
-      - deploy_test
+      - helm_lint
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
@@ -127,7 +127,7 @@ jobs:
     name: Deploy to production environment
     needs:
       - build
-      - deploy_preprod
+      - helm_lint
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
