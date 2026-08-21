@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.springframework.data.domain.Persistable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -29,7 +30,10 @@ class LaoRestriction(
   val until: ZonedDateTime?,
   @Id
   val crnUserId: String,
-) {
+): Persistable<String> {
+  override fun getId() = crnUserId
+  override fun isNew() = true
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is LaoRestriction) return false

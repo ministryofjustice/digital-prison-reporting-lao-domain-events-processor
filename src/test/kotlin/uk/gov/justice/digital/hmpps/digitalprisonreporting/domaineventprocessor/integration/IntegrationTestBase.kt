@@ -118,14 +118,8 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun setup() {
-    laoCrnRepository.deleteAll()
-    laoRestrictionRepository.deleteAll()
-    laoExclusionRepository.deleteAll()
-    probationIntegrationLaoMockServer.resetAll()
     inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build()).join()
     inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).join()
-    await().untilCallTo { laoExclusionRepository.count() } matches { it == 0L }
-    await().untilCallTo { laoRestrictionRepository.count() } matches { it == 0L }
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 0 }
   }

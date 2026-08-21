@@ -36,11 +36,11 @@ class LaoCrn(
   @Version
   val version: Int,
 
-  @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
+  @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
   @JoinColumn(name = "crn", referencedColumnName = "crn")
   val laoExclusions: MutableSet<LaoExclusion>,
 
-  @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
+  @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
   @JoinColumn(name = "crn", referencedColumnName = "crn")
   val laoRestrictions: MutableSet<LaoRestriction>,
 

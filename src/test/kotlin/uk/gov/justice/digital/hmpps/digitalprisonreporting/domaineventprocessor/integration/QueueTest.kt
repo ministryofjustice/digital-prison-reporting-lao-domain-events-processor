@@ -33,12 +33,13 @@ import java.time.ZonedDateTime
 class QueueTest : IntegrationTestBase() {
   @Test
   fun `new restriction is added`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "usera",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
@@ -71,18 +72,19 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(1)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(1)
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions.first().toLaoEntry()).satisfies(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("usera")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -94,13 +96,14 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `new exclusion is added`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(),
         laoRestrictions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "usera",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
@@ -132,19 +135,20 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Exclusion)
-    publishLaoEvent(LaoDataType.Exclusion)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions.first().toLaoEntry()).satisfies(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("usera")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -156,12 +160,13 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `exclusion is removed`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "usera",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
@@ -180,25 +185,27 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Exclusion)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
 
-    publishLaoEvent(LaoDataType.Exclusion)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
+      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
     }
   }
 
   @Test
   fun `restriction is removed`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "usera",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
@@ -207,7 +214,7 @@ class QueueTest : IntegrationTestBase() {
         ),
         laoRestrictions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "usera",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
@@ -232,26 +239,28 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
     }
   }
 
   @Test
   fun `restriction is updated`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(),
         laoRestrictions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "usera",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
@@ -276,16 +285,17 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
       assertThat(restrictions.first().toLaoEntry()).satisfies({
-        assertThat(it.crn).isEqualTo("A111111")
+        assertThat(it.crn).isEqualTo(crn)
         assertThat(it.userId).isEqualTo("usera")
         assertThat(it.reason).isEqualTo("Restricted")
         assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -296,12 +306,13 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `exclusion is updated`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "usera",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")),
@@ -327,17 +338,18 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Exclusion)
-    publishLaoEvent(LaoDataType.Exclusion)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
       assertThat(exclusions.first().toLaoEntry()).satisfies(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("usera")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -349,12 +361,13 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `two exclusion additions should add both and keep the initial`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -390,18 +403,19 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(3)
 
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -410,7 +424,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("usera")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -419,7 +433,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userb")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -431,13 +445,14 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `two restriction additions should add both and keep the initial`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(),
         laoRestrictions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -472,18 +487,19 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(3)
 
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -492,7 +508,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("usera")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -501,7 +517,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userb")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -513,12 +529,13 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `a restriction and exclusion addition should both be inserted and keep the initials`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -527,7 +544,7 @@ class QueueTest : IntegrationTestBase() {
         ),
         laoRestrictions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -569,17 +586,18 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(2)
 
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -588,7 +606,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("usera")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -596,12 +614,12 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(2)
 
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -610,7 +628,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("usera")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
@@ -622,8 +640,9 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `two restriction updates should update both and keep the initial`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     val initialEntry = LaoEntry(
-      "A111111",
+      crn,
       "usera",
       "Restricted",
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -631,19 +650,19 @@ class QueueTest : IntegrationTestBase() {
     )
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(),
         laoRestrictions = mutableSetOf(
           initialEntry.toRestriction(),
           LaoEntry(
-            "A111111",
+            crn,
             "userb",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
           ).toRestriction(),
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -677,13 +696,14 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(3)
 
       assertThat(restrictions).anySatisfy(
@@ -697,7 +717,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userb")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -706,7 +726,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -718,8 +738,9 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `two exclusion updates should update both and keep the initial`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     val initialEntry = LaoEntry(
-      "A111111",
+      crn,
       "usera",
       "Excluded!",
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -728,18 +749,18 @@ class QueueTest : IntegrationTestBase() {
 
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           initialEntry.toExclusion(),
           LaoEntry(
-            "A111111",
+            crn,
             "userb",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
           ).toExclusion(),
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -775,13 +796,14 @@ class QueueTest : IntegrationTestBase() {
         "exclusionMessage": "Excluded!"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Exclusion)
-    publishLaoEvent(LaoDataType.Exclusion)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(3)
 
       assertThat(exclusions).anySatisfy(
@@ -795,7 +817,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userb")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -804,7 +826,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -816,15 +838,16 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `a restriction and exclusion update should update both and keep the initials`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     val initialExclusionEntry = LaoEntry(
-      "A111111",
+      crn,
       "usera",
       "Excluded!",
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
     )
     val initialRestrictionEntry = LaoEntry(
-      "A111111",
+      crn,
       "usera",
       "Restricted",
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -832,11 +855,11 @@ class QueueTest : IntegrationTestBase() {
     )
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           initialExclusionEntry.toExclusion(),
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -844,9 +867,9 @@ class QueueTest : IntegrationTestBase() {
           ).toExclusion(),
         ),
         laoRestrictions = mutableSetOf(
-          initialExclusionEntry.toRestriction(),
+          initialRestrictionEntry.toRestriction(),
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -888,12 +911,13 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(2)
 
       assertThat(exclusions).anySatisfy(
@@ -907,7 +931,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -915,7 +939,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(2)
 
       assertThat(restrictions).anySatisfy(
@@ -929,7 +953,7 @@ class QueueTest : IntegrationTestBase() {
       )
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -941,8 +965,9 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `two restriction deletions should remove both and keep the initial`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     val initialEntry = LaoEntry(
-      "A111111",
+      crn,
       "usera",
       "Restricted",
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -950,19 +975,19 @@ class QueueTest : IntegrationTestBase() {
     )
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(),
         laoRestrictions = mutableSetOf(
           initialEntry.toRestriction(),
           LaoEntry(
-            "A111111",
+            crn,
             "userb",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
           ).toRestriction(),
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -987,13 +1012,14 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn("A111111").size).isEqualTo(0)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
@@ -1010,8 +1036,9 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `two exclusion deletions should remove both and keep the initial`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     val initialEntry = LaoEntry(
-      "A111111",
+      crn,
       "usera",
       "Excluded!",
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1019,18 +1046,18 @@ class QueueTest : IntegrationTestBase() {
     )
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           initialEntry.toExclusion(),
           LaoEntry(
-            "A111111",
+            crn,
             "userb",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
           ).toExclusion(),
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1056,13 +1083,14 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Exclusion)
-    publishLaoEvent(LaoDataType.Exclusion)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
+    publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
@@ -1079,15 +1107,16 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `a restriction and exclusion deletion should delete both and keep the initials`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
     val initialExclusionEntry = LaoEntry(
-      "A111111",
+      crn,
       "usera",
       "Excluded!",
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
     )
     val initialRestrictionEntry = LaoEntry(
-      "A111111",
+      crn,
       "usera",
       "Restricted",
       ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1095,11 +1124,11 @@ class QueueTest : IntegrationTestBase() {
     )
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           initialExclusionEntry.toExclusion(),
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1107,9 +1136,9 @@ class QueueTest : IntegrationTestBase() {
           ).toExclusion(),
         ),
         laoRestrictions = mutableSetOf(
-          initialExclusionEntry.toRestriction(),
+          initialRestrictionEntry.toRestriction(),
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1141,12 +1170,13 @@ class QueueTest : IntegrationTestBase() {
           "restrictionMessage": "Restricted"
         }
       """.trimIndent(),
+      crn,
     )
-    publishLaoEvent(LaoDataType.Restriction)
-    publishLaoEvent(LaoDataType.Restriction)
+    publishLaoEvent(LaoDataType.Restriction, crn)
+    publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
@@ -1159,7 +1189,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
@@ -1176,12 +1206,14 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `a restriction and exclusion addition should both be inserted and keep the initials even if the findByCrn for laocrns fails`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
+    val crn2 = "TEST2-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1190,7 +1222,7 @@ class QueueTest : IntegrationTestBase() {
         ),
         laoRestrictions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1232,10 +1264,10 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
-      "A222222",
+      crn2,
     )
 
-    publishLaoEvent(LaoDataType.Restriction, "A222222", "1")
+    publishLaoEvent(LaoDataType.Restriction, crn2, "1")
 
     await().atMost(Duration.ofSeconds(30)).untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it!! > 0 }
     await().atMost(Duration.ofSeconds(30)).untilCallTo {
@@ -1244,44 +1276,44 @@ class QueueTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy({
-        assertThat(it.crn).isEqualTo("A111111")
+        assertThat(it.crn).isEqualTo(crn)
         assertThat(it.userId).isEqualTo("userc")
         assertThat(it.reason).isEqualTo("Excluded!")
         assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
         assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
       })
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy({
-        assertThat(it.crn).isEqualTo("A111111")
+        assertThat(it.crn).isEqualTo(crn)
         assertThat(it.userId).isEqualTo("userc")
         assertThat(it.reason).isEqualTo("Restricted")
         assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
         assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
       })
 
-      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn("A222222")
+      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn(crn2)
       assertThat(exclusions2.size).isEqualTo(1)
 
       assertThat(exclusions2).anySatisfy({
-        assertThat(it.crn).isEqualTo("A222222")
+        assertThat(it.crn).isEqualTo(crn2)
         assertThat(it.userId).isEqualTo("userc")
         assertThat(it.reason).isEqualTo("Excluded!")
         assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
         assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
       })
 
-      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn("A222222")
+      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn(crn2)
       assertThat(restrictions2.size).isEqualTo(1)
 
       assertThat(restrictions2).anySatisfy({
-        assertThat(it.crn).isEqualTo("A222222")
+        assertThat(it.crn).isEqualTo(crn2)
         assertThat(it.userId).isEqualTo("userc")
         assertThat(it.reason).isEqualTo("Restricted")
         assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1294,12 +1326,14 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `a restriction and exclusion addition should both be inserted and keep the initials even if the save fails`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
+    val crn2 = "TEST2-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1308,7 +1342,7 @@ class QueueTest : IntegrationTestBase() {
         ),
         laoRestrictions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1350,10 +1384,10 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
-      "A222222",
+      crn2,
     )
 
-    publishLaoEvent(LaoDataType.Restriction, "A222222", "1")
+    publishLaoEvent(LaoDataType.Restriction, crn2, "1")
 
     await().atMost(Duration.ofSeconds(30)).untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it!! > 0 }
     await().atMost(Duration.ofSeconds(30)).untilCallTo {
@@ -1362,44 +1396,44 @@ class QueueTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy({
-        assertThat(it.crn).isEqualTo("A111111")
+        assertThat(it.crn).isEqualTo(crn)
         assertThat(it.userId).isEqualTo("userc")
         assertThat(it.reason).isEqualTo("Excluded!")
         assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
         assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
       })
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy({
-        assertThat(it.crn).isEqualTo("A111111")
+        assertThat(it.crn).isEqualTo(crn)
         assertThat(it.userId).isEqualTo("userc")
         assertThat(it.reason).isEqualTo("Restricted")
         assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
         assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
       })
 
-      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn("A222222")
+      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn(crn2)
       assertThat(exclusions2.size).isEqualTo(1)
 
       assertThat(exclusions2).anySatisfy({
-        assertThat(it.crn).isEqualTo("A222222")
+        assertThat(it.crn).isEqualTo(crn2)
         assertThat(it.userId).isEqualTo("userc")
         assertThat(it.reason).isEqualTo("Excluded!")
         assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
         assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
       })
 
-      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn("A222222")
+      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn(crn2)
       assertThat(restrictions2.size).isEqualTo(1)
 
       assertThat(restrictions2).anySatisfy({
-        assertThat(it.crn).isEqualTo("A222222")
+        assertThat(it.crn).isEqualTo(crn2)
         assertThat(it.userId).isEqualTo("userc")
         assertThat(it.reason).isEqualTo("Restricted")
         assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1412,12 +1446,14 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `a restriction and exclusion addition should both be inserted and keep the initials even if the api call fails`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
+    val crn2 = "TEST2-${System.nanoTime()}"
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1426,7 +1462,7 @@ class QueueTest : IntegrationTestBase() {
         ),
         laoRestrictions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1438,9 +1474,9 @@ class QueueTest : IntegrationTestBase() {
       ),
     )
 
-    probationIntegrationLaoMockServer.stub500ResponseInitial("case/A222222/access")
+    probationIntegrationLaoMockServer.stub500ResponseInitial("case/$crn2/access")
 
-    publishLaoEvent(LaoDataType.Restriction, "A222222", "1")
+    publishLaoEvent(LaoDataType.Restriction, crn2, "1")
 
     await().atMost(Duration.ofSeconds(30)).untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it!! > 0 }
 
@@ -1465,7 +1501,7 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
-      "A222222",
+      crn2,
     )
 
     await().atMost(Duration.ofSeconds(30)).untilCallTo {
@@ -1474,12 +1510,12 @@ class QueueTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1487,12 +1523,12 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1500,12 +1536,12 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn("A222222")
+      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn(crn2)
       assertThat(exclusions2.size).isEqualTo(1)
 
       assertThat(exclusions2).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A222222")
+          assertThat(it.crn).isEqualTo(crn2)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1513,12 +1549,12 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn("A222222")
+      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn(crn2)
       assertThat(restrictions2.size).isEqualTo(1)
 
       assertThat(restrictions2).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A222222")
+          assertThat(it.crn).isEqualTo(crn2)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1532,16 +1568,18 @@ class QueueTest : IntegrationTestBase() {
 
   @Test
   fun `a restriction and exclusion addition should fail and add messages onto the dlq if the deleteAll for laocrns continuously fails, but eventually all resolve`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
+    val crn2 = "TEST2-${System.nanoTime()}"
     doThrow(IllegalStateException(""))
       .doNothing()
       .whenever(laoCrnRepository)
       .deleteAll(any())
     laoCrnRepository.saveAndFlush(
       LaoCrn(
-        crn = "A111111",
+        crn = crn,
         laoExclusions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Excluded!",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1550,7 +1588,7 @@ class QueueTest : IntegrationTestBase() {
         ),
         laoRestrictions = mutableSetOf(
           LaoEntry(
-            "A111111",
+            crn,
             "userc",
             "Restricted",
             ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
@@ -1583,10 +1621,10 @@ class QueueTest : IntegrationTestBase() {
         "restrictionMessage": "Restricted"
       }
       """.trimIndent(),
-      "A222222",
+      crn2,
     )
 
-    publishLaoEvent(LaoDataType.Restriction, "A222222", "1")
+    publishLaoEvent(LaoDataType.Restriction, crn2, "1")
 
     await().atMost(Duration.ofSeconds(30)).untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it!! > 0 }
     await().atMost(Duration.ofSeconds(30)).untilCallTo {
@@ -1595,12 +1633,12 @@ class QueueTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn("A111111")
+      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1608,12 +1646,12 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn("A111111")
+      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.crn).isEqualTo(crn)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1621,12 +1659,12 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn("A222222")
+      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn(crn2)
       assertThat(exclusions2.size).isEqualTo(1)
 
       assertThat(exclusions2).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A222222")
+          assertThat(it.crn).isEqualTo(crn2)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Excluded!")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1634,12 +1672,12 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn("A222222")
+      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn(crn2)
       assertThat(restrictions2.size).isEqualTo(1)
 
       assertThat(restrictions2).anySatisfy(
         {
-          assertThat(it.crn).isEqualTo("A222222")
+          assertThat(it.crn).isEqualTo(crn2)
           assertThat(it.userId).isEqualTo("userc")
           assertThat(it.reason).isEqualTo("Restricted")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
@@ -1651,7 +1689,7 @@ class QueueTest : IntegrationTestBase() {
     }
   }
 
-  private fun publishLaoEvent(type: LaoDataType, crn: String = "A111111", description: String = "") {
+  private fun publishLaoEvent(type: LaoDataType, crn: String, description: String = "") {
     val event = LAOEvent(
       "probation-case.${type.name.lowercase()}.updated",
       1,
