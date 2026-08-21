@@ -29,7 +29,7 @@ class LaoExclusion(
   val until: ZonedDateTime?,
   @Id
   val crnUserId: String,
-): Persistable<String> {
+) : Persistable<String> {
   override fun getId() = crnUserId
   override fun isNew() = true
 
