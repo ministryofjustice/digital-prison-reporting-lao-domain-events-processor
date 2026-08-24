@@ -4,39 +4,14 @@ import jakarta.persistence.Id
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.LaoEntry
-import java.time.OffsetDateTime
+import java.sql.Timestamp
+import java.sql.Types
 import java.time.ZonedDateTime
 
 @Repository
 class LaoRestrictionRepository(
-  private val jdbcTemplate: JdbcTemplate,
+  val jdbcTemplate: JdbcTemplate,
 ) {
-
-  fun getLaoRestrictionsForCrn(crn: String): List<LaoRestriction> = jdbcTemplate.query(
-    """
-      SELECT
-        crn,
-        user_id,
-        reason,
-        since,
-        until,
-        crn_user_id
-      FROM product_.lao_restrictions
-      WHERE crn = ?
-    """.trimIndent(),
-    { rs, _ ->
-      LaoRestriction(
-        crn = rs.getString("crn"),
-        userId = rs.getString("user_id"),
-        reason = rs.getString("reason"),
-        since = rs.getObject("since", OffsetDateTime::class.java).toZonedDateTime(),
-        until = rs.getObject("until", OffsetDateTime::class.java)?.toZonedDateTime(),
-        crnUserId = rs.getString("crn_user_id"),
-      )
-    },
-    crn,
-  )
-
   fun deleteByCrn(crn: String): Int = jdbcTemplate.update(
     """
       DELETE FROM product_.lao_restrictions
@@ -65,8 +40,8 @@ class LaoRestrictionRepository(
       ps.setString(1, restriction.crn)
       ps.setString(2, restriction.userId)
       ps.setString(3, restriction.reason)
-      ps.setObject(4, restriction.since.toOffsetDateTime())
-      ps.setObject(5, restriction.until?.toOffsetDateTime())
+      ps.setTimestamp(4, Timestamp.from(restriction.since.toInstant()))
+      if (restriction.until != null) ps.setTimestamp(5, Timestamp.from(restriction.until.toInstant())) else ps.setNull(5, Types.TIMESTAMP_WITH_TIMEZONE)
       ps.setString(6, restriction.crnUserId)
     }
   }

@@ -4,39 +4,14 @@ import jakarta.persistence.Id
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.LaoEntry
-import java.time.OffsetDateTime
+import java.sql.Timestamp
+import java.sql.Types
 import java.time.ZonedDateTime
 
 @Repository
 class LaoExclusionRepository(
-  private val jdbcTemplate: JdbcTemplate,
+  val jdbcTemplate: JdbcTemplate,
 ) {
-
-  fun getLaoExclusionsForCrn(crn: String): List<LaoExclusion> = jdbcTemplate.query(
-    """
-      SELECT
-        crn,
-        user_id,
-        reason,
-        since,
-        until,
-        crn_user_id
-      FROM product_.lao_exclusions
-      WHERE crn = ?
-    """.trimIndent(),
-    { rs, _ ->
-      LaoExclusion(
-        crn = rs.getString("crn"),
-        userId = rs.getString("user_id"),
-        reason = rs.getString("reason"),
-        since = rs.getObject("since", OffsetDateTime::class.java).toZonedDateTime(),
-        until = rs.getObject("until", OffsetDateTime::class.java)?.toZonedDateTime(),
-        crnUserId = rs.getString("crn_user_id"),
-      )
-    },
-    crn,
-  )
-
   fun deleteByCrn(crn: String): Int = jdbcTemplate.update(
     """
       DELETE FROM product_.lao_exclusions
@@ -65,8 +40,8 @@ class LaoExclusionRepository(
       ps.setString(1, exclusion.crn)
       ps.setString(2, exclusion.userId)
       ps.setString(3, exclusion.reason)
-      ps.setObject(4, exclusion.since.toOffsetDateTime())
-      ps.setObject(5, exclusion.until?.toOffsetDateTime())
+      ps.setTimestamp(4, Timestamp.from(exclusion.since.toInstant()))
+      if (exclusion.until != null) ps.setTimestamp(5, Timestamp.from(exclusion.until.toInstant())) else ps.setNull(5, Types.TIMESTAMP_WITH_TIMEZONE)
       ps.setString(6, exclusion.crnUserId)
     }
   }

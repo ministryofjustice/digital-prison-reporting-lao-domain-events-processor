@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDO
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -27,7 +28,9 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrnRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusion
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestriction
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestrictionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.mocks.OAuthExtension
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer
@@ -40,6 +43,8 @@ import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.MissingTopicException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
+import java.time.OffsetDateTime
+import java.time.ZoneId
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Import(JwtAuthorisationHelper::class, TestFlywayConfig::class)
@@ -83,6 +88,9 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var entityManager: EntityManager
 
+  @Autowired
+  protected lateinit var jdbcTemplate: JdbcTemplate
+
   @MockitoSpyBean
   protected lateinit var laoCrnRepository: LaoCrnRepository
 
@@ -107,6 +115,56 @@ abstract class IntegrationTestBase {
       ),
     )
   }
+
+  fun getLaoRestrictionsForCrn(crn: String): List<LaoRestriction> = jdbcTemplate.query(
+    """
+      SELECT
+        crn,
+        user_id,
+        reason,
+        since,
+        until,
+        crn_user_id
+      FROM product_.lao_restrictions
+      WHERE crn = ?
+    """.trimIndent(),
+    { rs, _ ->
+      LaoRestriction(
+        crn = rs.getString("crn"),
+        userId = rs.getString("user_id"),
+        reason = rs.getString("reason"),
+        since = rs.getTimestamp("since").toInstant().atZone(ZoneId.of("Europe/London")),
+        until = rs.getTimestamp("until").toInstant().atZone(ZoneId.of("Europe/London")),
+        crnUserId = rs.getString("crn_user_id"),
+      )
+    },
+    crn,
+  )
+
+  fun getLaoExclusionsForCrn(crn: String): List<LaoExclusion> = jdbcTemplate.query(
+    """
+      SELECT
+        crn,
+        user_id,
+        reason,
+        since,
+        until,
+        crn_user_id
+      FROM product_.lao_exclusions
+      WHERE crn = ?
+    """.trimIndent(),
+    { rs, _ ->
+      LaoExclusion(
+        crn = rs.getString("crn"),
+        userId = rs.getString("user_id"),
+        reason = rs.getString("reason"),
+        since = rs.getObject("since", OffsetDateTime::class.java).toZonedDateTime(),
+        until = rs.getObject("until", OffsetDateTime::class.java)?.toZonedDateTime(),
+        crnUserId = rs.getString("crn_user_id"),
+      )
+    },
+    crn,
+  )
 
   protected fun jsonString(any: Any): String? = jsonMapper.writeValueAsString(any)
 

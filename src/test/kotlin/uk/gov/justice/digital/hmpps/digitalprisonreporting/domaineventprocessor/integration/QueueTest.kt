@@ -79,8 +79,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(1)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      assertThat(getLaoExclusionsForCrn(crn).size).isEqualTo(1)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions.first().toLaoEntry()).satisfies(
@@ -143,9 +143,9 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions.first().toLaoEntry()).satisfies(
@@ -194,8 +194,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
+      assertThat(getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      assertThat(getLaoExclusionsForCrn(crn).size).isEqualTo(0)
     }
   }
 
@@ -251,8 +251,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      assertThat(getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
     }
   }
@@ -298,8 +298,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      assertThat(getLaoExclusionsForCrn(crn).size).isEqualTo(0)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
       assertThat(restrictions.first().toLaoEntry()).satisfies(
         {
@@ -353,8 +353,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      assertThat(getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
       assertThat(exclusions.first().toLaoEntry()).satisfies(
         {
@@ -418,8 +418,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      assertThat(getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(3)
 
       assertThat(exclusions).anySatisfy(
@@ -503,8 +503,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      assertThat(getLaoExclusionsForCrn(crn).size).isEqualTo(0)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(3)
 
       assertThat(restrictions).anySatisfy(
@@ -606,7 +606,7 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(2)
 
       assertThat(exclusions).anySatisfy(
@@ -628,7 +628,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(2)
 
       assertThat(restrictions).anySatisfy(
@@ -717,8 +717,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      assertThat(getLaoExclusionsForCrn(crn).size).isEqualTo(0)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(3)
 
       assertThat(restrictions).anySatisfy(
@@ -817,8 +817,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      assertThat(getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(3)
 
       assertThat(exclusions).anySatisfy(
@@ -936,7 +936,7 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(2)
 
       assertThat(exclusions).anySatisfy(
@@ -958,7 +958,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(2)
 
       assertThat(restrictions).anySatisfy(
@@ -1038,8 +1038,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      assertThat(laoExclusionRepository.getLaoExclusionsForCrn(crn).size).isEqualTo(0)
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      assertThat(getLaoExclusionsForCrn(crn).size).isEqualTo(0)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
@@ -1109,8 +1109,8 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Exclusion, crn)
 
     await().untilAsserted {
-      assertThat(laoRestrictionRepository.getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      assertThat(getLaoRestrictionsForCrn(crn).size).isEqualTo(0)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
@@ -1200,7 +1200,7 @@ class QueueTest : IntegrationTestBase() {
     publishLaoEvent(LaoDataType.Restriction, crn)
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
@@ -1213,7 +1213,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
@@ -1305,7 +1305,7 @@ class QueueTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
@@ -1318,7 +1318,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
@@ -1331,7 +1331,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn(crn2)
+      val exclusions2 = getLaoExclusionsForCrn(crn2)
       assertThat(exclusions2.size).isEqualTo(1)
 
       assertThat(exclusions2).anySatisfy(
@@ -1344,7 +1344,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn(crn2)
+      val restrictions2 = getLaoRestrictionsForCrn(crn2)
       assertThat(restrictions2.size).isEqualTo(1)
 
       assertThat(restrictions2).anySatisfy(
@@ -1438,7 +1438,7 @@ class QueueTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
@@ -1451,7 +1451,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
@@ -1464,7 +1464,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn(crn2)
+      val exclusions2 = getLaoExclusionsForCrn(crn2)
       assertThat(exclusions2.size).isEqualTo(1)
 
       assertThat(exclusions2).anySatisfy(
@@ -1477,7 +1477,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn(crn2)
+      val restrictions2 = getLaoRestrictionsForCrn(crn2)
       assertThat(restrictions2.size).isEqualTo(1)
 
       assertThat(restrictions2).anySatisfy(
@@ -1565,7 +1565,7 @@ class QueueTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
@@ -1578,7 +1578,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
@@ -1591,7 +1591,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn(crn2)
+      val exclusions2 = getLaoExclusionsForCrn(crn2)
       assertThat(exclusions2.size).isEqualTo(1)
 
       assertThat(exclusions2).anySatisfy(
@@ -1604,7 +1604,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn(crn2)
+      val restrictions2 = getLaoRestrictionsForCrn(crn2)
       assertThat(restrictions2.size).isEqualTo(1)
 
       assertThat(restrictions2).anySatisfy(
@@ -1692,7 +1692,7 @@ class QueueTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     await().untilAsserted {
-      val exclusions = laoExclusionRepository.getLaoExclusionsForCrn(crn)
+      val exclusions = getLaoExclusionsForCrn(crn)
       assertThat(exclusions.size).isEqualTo(1)
 
       assertThat(exclusions).anySatisfy(
@@ -1705,7 +1705,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions = laoRestrictionRepository.getLaoRestrictionsForCrn(crn)
+      val restrictions = getLaoRestrictionsForCrn(crn)
       assertThat(restrictions.size).isEqualTo(1)
 
       assertThat(restrictions).anySatisfy(
@@ -1718,7 +1718,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val exclusions2 = laoExclusionRepository.getLaoExclusionsForCrn(crn2)
+      val exclusions2 = getLaoExclusionsForCrn(crn2)
       assertThat(exclusions2.size).isEqualTo(1)
 
       assertThat(exclusions2).anySatisfy(
@@ -1731,7 +1731,7 @@ class QueueTest : IntegrationTestBase() {
         },
       )
 
-      val restrictions2 = laoRestrictionRepository.getLaoRestrictionsForCrn(crn2)
+      val restrictions2 = getLaoRestrictionsForCrn(crn2)
       assertThat(restrictions2.size).isEqualTo(1)
 
       assertThat(restrictions2).anySatisfy(
