@@ -1,28 +1,78 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data
 
-import jakarta.persistence.Entity
 import jakarta.persistence.Id
-import jakarta.persistence.Table
-import org.springframework.data.domain.Persistable
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.LaoEntry
+import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 
 @Repository
-interface LaoRestrictionRepository : JpaRepository<LaoRestriction, String> {
+class LaoRestrictionRepository(
+  private val jdbcTemplate: JdbcTemplate,
+) {
 
-  @Query("SELECT r FROM LaoRestriction r WHERE r.crn = :crn")
-  fun getLaoRestrictionsForCrn(crn: String): List<LaoRestriction>
+  fun getLaoRestrictionsForCrn(crn: String): List<LaoRestriction> = jdbcTemplate.query(
+    """
+      SELECT
+        crn,
+        user_id,
+        reason,
+        since,
+        until,
+        crn_user_id
+      FROM product_.lao_restrictions
+      WHERE crn = ?
+    """.trimIndent(),
+    { rs, _ ->
+      LaoRestriction(
+        crn = rs.getString("crn"),
+        userId = rs.getString("user_id"),
+        reason = rs.getString("reason"),
+        since = rs.getObject("since", OffsetDateTime::class.java).toZonedDateTime(),
+        until = rs.getObject("until", OffsetDateTime::class.java)?.toZonedDateTime(),
+        crnUserId = rs.getString("crn_user_id"),
+      )
+    },
+    crn,
+  )
+
+  fun deleteByCrn(crn: String): Int = jdbcTemplate.update(
+    """
+      DELETE FROM product_.lao_restrictions
+      WHERE crn = ?
+    """.trimIndent(),
+    crn,
+  )
+
+  fun saveAll(restrictions: Collection<LaoRestriction>) {
+    jdbcTemplate.batchUpdate(
+      """
+      INSERT INTO product_.lao_restrictions
+      (
+        crn,
+        user_id,
+        reason,
+        since,
+        until,
+        crn_user_id
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
+      """.trimIndent(),
+      restrictions,
+      restrictions.size,
+    ) { ps, restriction ->
+      ps.setString(1, restriction.crn)
+      ps.setString(2, restriction.userId)
+      ps.setString(3, restriction.reason)
+      ps.setObject(4, restriction.since.toOffsetDateTime())
+      ps.setObject(5, restriction.until?.toOffsetDateTime())
+      ps.setString(6, restriction.crnUserId)
+    }
+  }
 }
 
-@Entity
-@Table(
-  name = "lao_restrictions",
-  schema = "product_",
-)
-class LaoRestriction(
+data class LaoRestriction(
   val crn: String,
   val userId: String,
   val reason: String?,
@@ -30,19 +80,5 @@ class LaoRestriction(
   val until: ZonedDateTime?,
   @Id
   val crnUserId: String,
-) : Persistable<String> {
-  override fun getId() = crnUserId
-  override fun isNew() = true
-
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (other !is LaoRestriction) return false
-
-    if (crnUserId != other.crnUserId) return false
-
-    return true
-  }
-
-  override fun hashCode(): Int = crnUserId.hashCode()
-}
+)
 fun LaoRestriction.toLaoEntry() = LaoEntry(crn, userId, reason, since, until)

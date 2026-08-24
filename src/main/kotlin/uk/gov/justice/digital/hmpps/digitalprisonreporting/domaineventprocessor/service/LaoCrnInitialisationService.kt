@@ -22,7 +22,7 @@ class LaoCrnInitialisationService(
     )
     when (crns.size) {
       0 -> {
-        laoCrnRepository.save(LaoCrn(crn = crn, version = 0, laoRestrictions = mutableSetOf(), laoExclusions = mutableSetOf()))
+        laoCrnRepository.save(LaoCrn(crn = crn, version = 0))
         deleteExtraCrns(laoCrnRepository.findByCrn(crn))
       }
       1 -> return
