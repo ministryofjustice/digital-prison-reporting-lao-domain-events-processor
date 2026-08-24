@@ -41,7 +41,7 @@ class LaoExclusionRepository(
       ps.setString(2, exclusion.userId)
       ps.setString(3, exclusion.reason)
       ps.setTimestamp(4, Timestamp.from(exclusion.since.toInstant()))
-      if (exclusion.until != null) ps.setTimestamp(5, Timestamp.from(exclusion.until.toInstant())) else ps.setNull(5, Types.TIMESTAMP_WITH_TIMEZONE)
+      if (exclusion.until != null) ps.setTimestamp(5, Timestamp.from(exclusion.until.toInstant())) else ps.setNull(5, Types.TIMESTAMP)
       ps.setString(6, exclusion.crnUserId)
     }
   }

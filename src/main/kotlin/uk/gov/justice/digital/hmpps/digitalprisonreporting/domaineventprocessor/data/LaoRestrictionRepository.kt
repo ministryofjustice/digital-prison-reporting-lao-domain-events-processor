@@ -41,7 +41,7 @@ class LaoRestrictionRepository(
       ps.setString(2, restriction.userId)
       ps.setString(3, restriction.reason)
       ps.setTimestamp(4, Timestamp.from(restriction.since.toInstant()))
-      if (restriction.until != null) ps.setTimestamp(5, Timestamp.from(restriction.until.toInstant())) else ps.setNull(5, Types.TIMESTAMP_WITH_TIMEZONE)
+      if (restriction.until != null) ps.setTimestamp(5, Timestamp.from(restriction.until.toInstant())) else ps.setNull(5, Types.TIMESTAMP)
       ps.setString(6, restriction.crnUserId)
     }
   }
