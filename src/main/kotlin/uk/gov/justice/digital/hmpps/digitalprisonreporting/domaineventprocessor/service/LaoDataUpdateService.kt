@@ -32,7 +32,6 @@ class LaoDataUpdateService(
     backoff = Backoff(delay = 1000),
   )
   fun process(crn: String) {
-    println("\n\n process *** \n\n")
     val liveLaoData = laoDataProbationIntegrationClient.getLaoData(crn)
     val liveLaoDataTransformedExclusions = liveLaoData.excludedFrom.map { LaoExclusion(crn, it.username, liveLaoData.exclusionMessage, it.since, it.until, "$crn:${it.username}") }
     val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoRestriction(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until, "$crn:${it.username}") }
@@ -44,9 +43,7 @@ class LaoDataUpdateService(
       laoExclusionRepository.saveAll(liveLaoDataTransformedExclusions)
       laoRestrictionRepository.saveAll(liveLaoDataTransformedRestrictions)
     } catch (e: Exception) {
-      val newE = e.toRetryableExceptionIfRequired() ?: e
-      println(newE)
-      throw newE
+      throw e.toRetryableExceptionIfRequired() ?: e
     }
 
     laoCrn.lastUpdated = LocalDateTime.now()
