@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service
 
-import org.slf4j.LoggerFactory
-import org.springframework.orm.jpa.JpaSystemException
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
@@ -11,6 +9,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestriction
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestrictionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.SerializableIsolationViolationException
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toRetryableExceptionIfRequired
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.probationintegration.LaoDataProbationIntegrationClient
 import java.time.LocalDateTime
 
@@ -22,39 +22,34 @@ class LaoDataUpdateService(
   private val laoRestrictionRepository: LaoRestrictionRepository,
   private val laoDataProbationIntegrationClient: LaoDataProbationIntegrationClient,
 ) {
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
 
+  // This is just a Redshift locking issue, it doesn't like when multiple deletes happen at the same time, and the entire process
+  // is idempotent and transaction wrapped, so there's no issue with retrying a large number of times. Rather retry and get it
+  // eventually than have messages on the DLQ for this issue.
   @Retryable(
-    retryFor = [JpaSystemException::class],
-    maxAttempts = 3,
+    retryFor = [SerializableIsolationViolationException::class],
+    maxAttempts = 20,
     backoff = Backoff(delay = 1000),
   )
   fun process(crn: String) {
-    val t0 = System.currentTimeMillis()
+    println("\n\n process *** \n\n")
     val liveLaoData = laoDataProbationIntegrationClient.getLaoData(crn)
-    log.info("getLaoData took {}ms", System.currentTimeMillis() - t0)
     val liveLaoDataTransformedExclusions = liveLaoData.excludedFrom.map { LaoExclusion(crn, it.username, liveLaoData.exclusionMessage, it.since, it.until, "$crn:${it.username}") }
     val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoRestriction(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until, "$crn:${it.username}") }
 
-    log.info(
-      "Updating CRN {} with {} exclusions and {} restrictions",
-      crn,
-      liveLaoDataTransformedExclusions.size,
-      liveLaoDataTransformedRestrictions.size,
-    )
-    val t1 = System.currentTimeMillis()
     val laoCrn = laoCrnRepository.findByCrn(crn).single()
-    log.info("findByCrn took {}ms", System.currentTimeMillis() - t1)
-    laoExclusionRepository.deleteByCrn(crn)
-    laoRestrictionRepository.deleteByCrn(crn)
-    laoExclusionRepository.saveAll(liveLaoDataTransformedExclusions)
-    laoRestrictionRepository.saveAll(liveLaoDataTransformedRestrictions)
+    try {
+      laoExclusionRepository.deleteByCrn(crn)
+      laoRestrictionRepository.deleteByCrn(crn)
+      laoExclusionRepository.saveAll(liveLaoDataTransformedExclusions)
+      laoRestrictionRepository.saveAll(liveLaoDataTransformedRestrictions)
+    } catch (e: Exception) {
+      val newE = e.toRetryableExceptionIfRequired() ?: e
+      println(newE)
+      throw newE
+    }
 
-    val t2 = System.currentTimeMillis()
     laoCrn.lastUpdated = LocalDateTime.now()
     laoCrnRepository.save(laoCrn)
-    log.info("save took {}ms", System.currentTimeMillis() - t2)
   }
 }

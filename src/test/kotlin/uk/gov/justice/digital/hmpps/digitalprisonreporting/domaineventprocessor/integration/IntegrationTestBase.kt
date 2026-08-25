@@ -79,10 +79,10 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var hmppsQueueService: HmppsQueueService
 
-  @Autowired
+  @MockitoSpyBean
   protected lateinit var laoExclusionRepository: LaoExclusionRepository
 
-  @Autowired
+  @MockitoSpyBean
   protected lateinit var laoRestrictionRepository: LaoRestrictionRepository
 
   @Autowired

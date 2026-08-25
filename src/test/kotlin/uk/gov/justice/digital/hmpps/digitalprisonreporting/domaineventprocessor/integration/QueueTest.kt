@@ -8,11 +8,13 @@ import org.awaitility.kotlin.atLeast
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.whenever
+import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.test.util.AopTestUtils
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.LAOEvent
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.LaoDataType
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import java.sql.SQLException
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -1358,6 +1361,128 @@ class QueueTest : IntegrationTestBase() {
       )
 
       verify(messageListener, atLeast(2)).processMessage(any())
+    }
+  }
+
+  @Test
+  fun `a restriction and exclusion addition should both be inserted and keep the initials even if the delete fails with a SerializableIsolationViolationException`() = runTest {
+    val crn = "TEST-${System.nanoTime()}"
+    val crn2 = "TEST2-${System.nanoTime()}"
+    laoCrnRepository.saveAndFlush(
+      LaoCrn(
+        crn = crn,
+
+        version = 0,
+      ),
+    )
+    laoExclusionRepository.saveAll(
+      mutableSetOf(
+        LaoEntry(
+          crn,
+          "userc",
+          "Excluded!",
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
+        ).toExclusion(),
+      ),
+    )
+    laoRestrictionRepository.saveAll(
+      mutableSetOf(
+        LaoEntry(
+          crn,
+          "userc",
+          "Restricted",
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")),
+          ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")),
+        ).toRestriction(),
+      ),
+    )
+
+    doThrow(UncategorizedSQLException("Invalid operation: 1023; Serializable isolation violation", "DELETE FROM product_.lao_exclusions WHERE crn = ?", SQLException("Invalid operation: 1023; Serializable isolation violation")))
+      .doCallRealMethod()
+      .whenever(laoRestrictionRepository)
+      .deleteByCrn(any())
+
+    probationIntegrationLaoMockServer.stubGetLaoDataForCrn(
+      """
+      {
+        "restrictedTo": [
+          {
+            "username": "userc",
+            "since": "2026-01-01T12:30:00.000000000+01:00",
+            "until": "2026-01-01T13:00:00.000000000+01:00"
+          }
+        ],
+        "excludedFrom": [
+          {
+            "username": "userc",
+            "since": "2026-01-01T12:30:00.000000000+01:00",
+            "until": "2026-01-01T13:00:00.000000000+01:00"
+          }
+        ],
+        "exclusionMessage": "Excluded!",
+        "restrictionMessage": "Restricted"
+      }
+      """.trimIndent(),
+      crn2,
+    )
+
+    publishLaoEvent(LaoDataType.Restriction, crn2, "1")
+
+    await().untilAsserted {
+      val exclusions = getLaoExclusionsForCrn(crn)
+      assertThat(exclusions.size).isEqualTo(1)
+
+      assertThat(exclusions).anySatisfy(
+        {
+          assertThat(it.crn).isEqualTo(crn)
+          assertThat(it.userId).isEqualTo("userc")
+          assertThat(it.reason).isEqualTo("Excluded!")
+          assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
+        },
+      )
+
+      val restrictions = getLaoRestrictionsForCrn(crn)
+      assertThat(restrictions.size).isEqualTo(1)
+
+      assertThat(restrictions).anySatisfy(
+        {
+          assertThat(it.crn).isEqualTo(crn)
+          assertThat(it.userId).isEqualTo("userc")
+          assertThat(it.reason).isEqualTo("Restricted")
+          assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
+        },
+      )
+
+      val exclusions2 = getLaoExclusionsForCrn(crn2)
+      assertThat(exclusions2.size).isEqualTo(1)
+
+      assertThat(exclusions2).anySatisfy(
+        {
+          assertThat(it.crn).isEqualTo(crn2)
+          assertThat(it.userId).isEqualTo("userc")
+          assertThat(it.reason).isEqualTo("Excluded!")
+          assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
+        },
+      )
+
+      val restrictions2 = getLaoRestrictionsForCrn(crn2)
+      assertThat(restrictions2.size).isEqualTo(1)
+
+      assertThat(restrictions2).anySatisfy(
+        {
+          assertThat(it.crn).isEqualTo(crn2)
+          assertThat(it.userId).isEqualTo("userc")
+          assertThat(it.reason).isEqualTo("Restricted")
+          assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 30, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
+        },
+      )
+
+      verify(laoExclusionRepository, times(2)).deleteByCrn(any())
     }
   }
 
