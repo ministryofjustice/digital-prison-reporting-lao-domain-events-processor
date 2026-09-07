@@ -29,7 +29,7 @@ dependencies {
   testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
-  testImplementation("org.postgresql:postgresql:42.7.11")
+  testImplementation("org.postgresql:postgresql:42.7.12")
   testImplementation("org.testcontainers:localstack:1.21.4")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
