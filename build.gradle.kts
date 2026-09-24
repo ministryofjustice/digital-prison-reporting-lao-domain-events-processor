@@ -1,7 +1,7 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.7"
-  kotlin("jvm") version "2.4.10"
-  kotlin("plugin.spring") version "2.4.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.9"
+  kotlin("jvm") version "2.4.20"
+  kotlin("plugin.spring") version "2.4.20"
   kotlin("plugin.jpa") version "2.4.20"
 }
 
@@ -9,7 +9,7 @@ val awsSdkVersion = "2.54.13"
 val testContainersVersion = "1.21.4"
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.2")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
@@ -22,7 +22,7 @@ dependencies {
 
   testRuntimeOnly("org.flywaydb:flyway-database-postgresql")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.1")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.2")
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.13.0")
