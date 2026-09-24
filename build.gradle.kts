@@ -5,7 +5,7 @@ plugins {
   kotlin("plugin.jpa") version "2.4.20"
 }
 
-val awsSdkVersion = "2.54.13"
+val awsSdkVersion = "2.55.1"
 val testContainersVersion = "1.21.4"
 
 dependencies {
