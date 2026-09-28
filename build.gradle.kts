@@ -14,7 +14,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0")
   implementation("software.amazon.awssdk:redshiftdata:$awsSdkVersion")
   implementation("com.amazon.redshift:redshift-jdbc4-no-awssdk:1.2.45.1069")
 

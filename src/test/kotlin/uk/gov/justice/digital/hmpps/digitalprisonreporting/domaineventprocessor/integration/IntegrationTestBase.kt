@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.InboundMessageListener
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.LaoReconciliationService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ProbationIntegrationLaoMockServer
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
@@ -84,6 +85,9 @@ abstract class IntegrationTestBase {
 
   @MockitoSpyBean
   protected lateinit var laoRestrictionRepository: LaoRestrictionRepository
+
+  @MockitoSpyBean
+  protected lateinit var laoReconciliationService: LaoReconciliationService
 
   @Autowired
   protected lateinit var entityManager: EntityManager

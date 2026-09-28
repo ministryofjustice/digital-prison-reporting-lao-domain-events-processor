@@ -22,10 +22,9 @@ class LaoDataUpdateService(
   private val laoRestrictionRepository: LaoRestrictionRepository,
   private val laoDataProbationIntegrationClient: LaoDataProbationIntegrationClient,
 ) {
-
-  // This is just a Redshift locking issue, it doesn't like when multiple deletes happen at the same time, and the entire process
-  // is idempotent and transaction wrapped, so there's no issue with retrying a large number of times. Rather retry and get it
-  // eventually than have messages on the DLQ for this issue.
+  // This is just a Redshift locking issue, it doesn't like when multiple deletes happen at the same time, and the
+  // entire process is idempotent and transaction wrapped, so there's no issue with retrying a large number of times.
+  // We would rather retry and get it eventually, than have messages on the DLQ for this issue.
   @Retryable(
     retryFor = [SerializableIsolationViolationException::class],
     maxAttempts = 20,
@@ -36,12 +35,28 @@ class LaoDataUpdateService(
     val liveLaoDataTransformedExclusions = liveLaoData.excludedFrom.map { LaoExclusion(crn, it.username, liveLaoData.exclusionMessage, it.since, it.until, "$crn:${it.username}") }
     val liveLaoDataTransformedRestrictions = liveLaoData.restrictedTo.map { LaoRestriction(crn, it.username, liveLaoData.restrictionMessage, it.since, it.until, "$crn:${it.username}") }
 
+    updateRestrictionsExclusions(crn, liveLaoDataTransformedExclusions, liveLaoDataTransformedRestrictions)
+  }
+
+  // This is just a Redshift locking issue, it doesn't like when multiple deletes happen at the same time, and the
+  // entire process is idempotent and transaction wrapped, so there's no issue with retrying a large number of times.
+  // We would rather retry and get it eventually, than have messages on the DLQ for this issue.
+  @Retryable(
+    retryFor = [SerializableIsolationViolationException::class],
+    maxAttempts = 20,
+    backoff = Backoff(delay = 1000),
+  )
+  fun saveLaoDataForCrn(crn: String, exclusions: List<LaoExclusion>, restrictions: List<LaoRestriction>) {
+    updateRestrictionsExclusions(crn, exclusions, restrictions)
+  }
+
+  private fun updateRestrictionsExclusions(crn: String, exclusions: List<LaoExclusion>, restrictions: List<LaoRestriction>) {
     val laoCrn = laoCrnRepository.findByCrn(crn).single()
     try {
       laoExclusionRepository.deleteByCrn(crn)
       laoRestrictionRepository.deleteByCrn(crn)
-      laoExclusionRepository.saveAll(liveLaoDataTransformedExclusions)
-      laoRestrictionRepository.saveAll(liveLaoDataTransformedRestrictions)
+      laoExclusionRepository.saveAll(exclusions)
+      laoRestrictionRepository.saveAll(restrictions)
     } catch (e: Exception) {
       throw e.toRetryableExceptionIfRequired() ?: e
     }

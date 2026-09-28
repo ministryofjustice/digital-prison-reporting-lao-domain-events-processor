@@ -3,13 +3,19 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 import io.netty.channel.ConnectTimeoutException
 import io.netty.handler.timeout.ReadTimeoutException
 import io.netty.handler.timeout.TimeoutException
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientRequestException
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.bodyToMono
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
 import java.io.IOException
 import java.time.Duration
 import java.time.ZonedDateTime
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.jvm.java
 
 class LaoDataProbationIntegrationClient(
   private val laoDataProbationIntegrationClient: WebClient,
@@ -21,6 +27,61 @@ class LaoDataProbationIntegrationClient(
     .bodyToMono(LaoDataResponse::class.java)
     .retryWhen(retryWithExponentialBackOffAndJitter)
     .block()!!
+
+  data class LaoApiDataEntry(
+    val username: String,
+    val since: ZonedDateTime,
+    val until: ZonedDateTime?,
+  )
+
+  data class LaoDataResponse(
+    val excludedFrom: List<LaoApiDataEntry> = emptyList(),
+    val restrictedTo: List<LaoApiDataEntry> = emptyList(),
+    val exclusionMessage: String?,
+    val restrictionMessage: String?,
+  )
+
+  fun getAllLaoData(): List<AllCasesContentEntry> {
+    val firstRequest = getAllCasesPage(0).block()!!
+    val cases = firstRequest.content
+    if (firstRequest.page.totalPages == 1) {
+      return cases
+    }
+    return Flux.fromIterable((1..firstRequest.page.totalPages))
+      .flatMap({ getAllCasesPage(it) }, firstRequest.page.totalPages)
+      .collectList()
+      .block()!!
+      .flatMap({ it.content })
+  }
+
+  private fun getAllCasesPage(page: Int): Mono<AllCasesResponse> = laoDataProbationIntegrationClient.get()
+    .uri("/all-cases?size=1000&page=$page")
+    .header("Content-Type", "application/json")
+    .retrieve()
+    .bodyToMono(AllCasesResponse::class.java)
+    .retryWhen(retryWithExponentialBackOffAndJitter)
+
+  data class AllCasesResponse(
+    val content: List<AllCasesContentEntry>,
+    val page: Page,
+  )
+
+  data class Page(
+    val size: Int,
+    val number: Int,
+    val totalElements: Int,
+    val totalPages: Int,
+  )
+
+  data class AllCasesContentEntry(
+    val crn: String,
+    val username: String,
+    val type: String,
+    val exclusionMessage: String?,
+    val restrictionMessage: String?,
+    val since: ZonedDateTime,
+    val until: ZonedDateTime?,
+  )
 
   private val retryWithExponentialBackOffAndJitter = Retry
     .backoff(3, Duration.ofMillis(500))
@@ -42,16 +103,3 @@ class LaoDataProbationIntegrationClient(
       }
     }
 }
-
-data class LaoApiDataEntry(
-  val username: String,
-  val since: ZonedDateTime,
-  val until: ZonedDateTime?,
-)
-
-data class LaoDataResponse(
-  val excludedFrom: List<LaoApiDataEntry> = emptyList(),
-  val restrictedTo: List<LaoApiDataEntry> = emptyList(),
-  val exclusionMessage: String?,
-  val restrictionMessage: String?,
-)

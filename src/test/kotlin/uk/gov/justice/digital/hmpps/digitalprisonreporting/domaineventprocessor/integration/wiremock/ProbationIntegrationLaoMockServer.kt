@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 
 const val PROBATION_INTEGRATION_LAO_WIREMOCK_PORT = 8082
@@ -51,6 +53,22 @@ class ProbationIntegrationLaoMockServer : MockServer(PROBATION_INTEGRATION_LAO_W
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(createPayload()),
+        ),
+    )
+  }
+
+  fun stubGetAllCases(
+    page: Int = 0,
+    payload: String,
+  ) {
+    stubFor(
+      get("$urlPrefix/all-cases")
+        .withQueryParam("size", WireMock.equalTo("1000"))
+        .withQueryParam("page", WireMock.equalTo(page.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(payload).withStatus(200),
         ),
     )
   }
