@@ -62,9 +62,7 @@ class ProbationIntegrationLaoMockServer : MockServer(PROBATION_INTEGRATION_LAO_W
     payload: String,
   ) {
     stubFor(
-      get("$urlPrefix/all-cases")
-        .withQueryParam("size", WireMock.equalTo("1000"))
-        .withQueryParam("page", WireMock.equalTo(page.toString()))
+      get("$urlPrefix/all-cases?size=1000&page=$page")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

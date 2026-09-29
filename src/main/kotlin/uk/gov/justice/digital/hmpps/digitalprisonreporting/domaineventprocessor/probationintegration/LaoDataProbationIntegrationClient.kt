@@ -16,6 +16,7 @@ import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.jvm.java
+import kotlin.math.max
 
 class LaoDataProbationIntegrationClient(
   private val laoDataProbationIntegrationClient: WebClient,
@@ -44,14 +45,16 @@ class LaoDataProbationIntegrationClient(
   fun getAllLaoData(): List<AllCasesContentEntry> {
     val firstRequest = getAllCasesPage(0).block()!!
     val cases = firstRequest.content
-    if (firstRequest.page.totalPages == 1) {
+    if (firstRequest.page.totalPages <= 1) {
       return cases
     }
-    return Flux.fromIterable((1..firstRequest.page.totalPages))
-      .flatMap({ getAllCasesPage(it) }, firstRequest.page.totalPages)
+    val pages = Flux.fromIterable((1..< firstRequest.page.totalPages))
+      .flatMap({ getAllCasesPage(it) }, max(1, firstRequest.page.totalPages))
       .collectList()
       .block()!!
-      .flatMap({ it.content })
+
+    pages.add(firstRequest)
+    return pages.flatMap({ it.content })
   }
 
   private fun getAllCasesPage(page: Int): Mono<AllCasesResponse> = laoDataProbationIntegrationClient.get()
@@ -79,8 +82,8 @@ class LaoDataProbationIntegrationClient(
     val type: String,
     val exclusionMessage: String?,
     val restrictionMessage: String?,
-    val since: ZonedDateTime,
-    val until: ZonedDateTime?,
+    val startDate: ZonedDateTime,
+    val endDate: ZonedDateTime?,
   )
 
   private val retryWithExponentialBackOffAndJitter = Retry
