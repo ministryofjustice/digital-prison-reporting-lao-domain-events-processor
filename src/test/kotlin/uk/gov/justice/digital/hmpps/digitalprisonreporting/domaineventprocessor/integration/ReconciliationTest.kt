@@ -6,11 +6,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toLaoEntry
-import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
 
 class ReconciliationTest : IntegrationTestBase() {
 
@@ -49,7 +47,7 @@ class ReconciliationTest : IntegrationTestBase() {
       """.trimIndent(),
     )
     laoReconciliationService.reconcile()
-    await().timeout(Duration.of(5, ChronoUnit.SECONDS)).untilAsserted {
+    await().untilAsserted {
       val exclusions = getLaoExclusionsForCrn("A111111")
       assertThat(exclusions.size).isEqualTo(1)
 
@@ -127,7 +125,7 @@ class ReconciliationTest : IntegrationTestBase() {
       """.trimIndent(),
     )
     laoReconciliationService.reconcile()
-    await().timeout(Duration.of(5, ChronoUnit.SECONDS)).untilAsserted {
+    await().untilAsserted {
       val exclusions = getLaoExclusionsForCrn("A111111")
       assertThat(exclusions.size).isEqualTo(2)
 
@@ -195,7 +193,7 @@ class ReconciliationTest : IntegrationTestBase() {
       """.trimIndent(),
     )
     laoReconciliationService.reconcile()
-    await().timeout(Duration.of(5, ChronoUnit.SECONDS)).untilAsserted {
+    await().untilAsserted {
       val exclusions = getLaoExclusionsForCrn("A111111")
       assertThat(exclusions.size).isEqualTo(1)
 
