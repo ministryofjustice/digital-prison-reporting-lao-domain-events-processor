@@ -5,14 +5,12 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusion
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toLaoEntry
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalUnit
 
 class ReconciliationTest : IntegrationTestBase() {
 
@@ -27,7 +25,8 @@ class ReconciliationTest : IntegrationTestBase() {
     "0,0,1",
   )
   fun `should run the reconciliation for a single page`(size: String, number: String, totalElements: String) {
-    probationIntegrationLaoMockServer.stubGetAllCases(payload = """
+    probationIntegrationLaoMockServer.stubGetAllCases(
+      payload = """
       {
         "content": [
           {
@@ -47,10 +46,10 @@ class ReconciliationTest : IntegrationTestBase() {
           "totalPages": 1
         }
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     laoReconciliationService.reconcile()
     await().timeout(Duration.of(5, ChronoUnit.SECONDS)).untilAsserted {
-
       val exclusions = getLaoExclusionsForCrn("A111111")
       assertThat(exclusions.size).isEqualTo(1)
 
@@ -100,7 +99,8 @@ class ReconciliationTest : IntegrationTestBase() {
           "totalPages": 2
         }
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
 
     probationIntegrationLaoMockServer.stubGetAllCases(
       page = 1,
@@ -124,13 +124,12 @@ class ReconciliationTest : IntegrationTestBase() {
           "totalPages": 2
         }
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     laoReconciliationService.reconcile()
     await().timeout(Duration.of(5, ChronoUnit.SECONDS)).untilAsserted {
-
       val exclusions = getLaoExclusionsForCrn("A111111")
       assertThat(exclusions.size).isEqualTo(2)
-
 
       assertThat(exclusions).anySatisfy(
         {
@@ -178,7 +177,8 @@ class ReconciliationTest : IntegrationTestBase() {
           "totalPages": 2
         }
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
 
     probationIntegrationLaoMockServer.stubGetAllCases(
       page = 1,
@@ -192,10 +192,10 @@ class ReconciliationTest : IntegrationTestBase() {
           "totalPages": 2
         }
       }
-    """.trimIndent())
+      """.trimIndent(),
+    )
     laoReconciliationService.reconcile()
     await().timeout(Duration.of(5, ChronoUnit.SECONDS)).untilAsserted {
-
       val exclusions = getLaoExclusionsForCrn("A111111")
       assertThat(exclusions.size).isEqualTo(1)
 

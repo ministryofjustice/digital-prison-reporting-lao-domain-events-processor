@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock
 
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 
 const val PROBATION_INTEGRATION_LAO_WIREMOCK_PORT = 8082

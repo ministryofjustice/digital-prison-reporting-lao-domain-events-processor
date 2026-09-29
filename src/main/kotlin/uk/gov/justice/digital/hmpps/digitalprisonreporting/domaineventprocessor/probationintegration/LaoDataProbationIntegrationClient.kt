@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 import io.netty.channel.ConnectTimeoutException
 import io.netty.handler.timeout.ReadTimeoutException
 import io.netty.handler.timeout.TimeoutException
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientRequestException
 import org.springframework.web.reactive.function.client.WebClientResponseException
@@ -14,7 +13,6 @@ import reactor.util.retry.Retry
 import java.io.IOException
 import java.time.Duration
 import java.time.ZonedDateTime
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.jvm.java
 import kotlin.math.max
 
@@ -48,7 +46,7 @@ class LaoDataProbationIntegrationClient(
     if (firstRequest.page.totalPages <= 1) {
       return cases
     }
-    val pages = Flux.fromIterable((1..< firstRequest.page.totalPages))
+    val pages = Flux.fromIterable((1..<firstRequest.page.totalPages))
       .flatMap({ getAllCasesPage(it) }, max(1, firstRequest.page.totalPages))
       .collectList()
       .block()!!
