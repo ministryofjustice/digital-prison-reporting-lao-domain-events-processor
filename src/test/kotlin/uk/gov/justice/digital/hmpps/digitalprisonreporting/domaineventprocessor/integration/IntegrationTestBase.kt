@@ -163,6 +163,7 @@ abstract class IntegrationTestBase {
     inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).join()
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 0 }
+    hmppsAuthMockServer.resetRequests()
     hmppsAuthMockServer.stubGrantToken()
   }
 
