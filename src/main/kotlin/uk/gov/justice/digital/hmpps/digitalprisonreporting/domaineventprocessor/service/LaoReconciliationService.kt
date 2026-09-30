@@ -23,7 +23,7 @@ class LaoReconciliationService(
           .map { entry -> LaoExclusion(it.key, entry.username, entry.exclusionMessage, entry.startDate, entry.endDate, "${it.key}:${entry.username}") }
         val restrictions = it.value
           .filter { entry -> entry.type.lowercase() == "restriction" }
-          .map { entry -> LaoRestriction(it.key, entry.username, entry.exclusionMessage, entry.startDate, entry.endDate, "${it.key}:${entry.username}") }
+          .map { entry -> LaoRestriction(it.key, entry.username, entry.restrictionMessage, entry.startDate, entry.endDate, "${it.key}:${entry.username}") }
         laoDataUpdateService.saveLaoDataForCrn(it.key, exclusions, restrictions)
       }
     }
