@@ -80,5 +80,5 @@ management:
         time-to-live: 2000ms
 
 batch:
-  enabled: ${BATCH_ENABLED}
-  type: ${BATCH_TYPE}
+  enabled: ${BATCH_ENABLED:false}
+  type: ${BATCH_TYPE:}
