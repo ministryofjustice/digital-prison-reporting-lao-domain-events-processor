@@ -14,7 +14,6 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-
   implementation("software.amazon.awssdk:redshiftdata:$awsSdkVersion")
   implementation("com.amazon.redshift:redshift-jdbc4-no-awssdk:1.2.45.1069")
 
@@ -26,7 +25,7 @@ dependencies {
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.13.0")
-  testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
+
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
   testImplementation("org.postgresql:postgresql:42.7.13")

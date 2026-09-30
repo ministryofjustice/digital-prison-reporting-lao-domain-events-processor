@@ -14,9 +14,9 @@ import java.time.Duration
 
 @Configuration
 class ProbationIntegrationWebClientConfig(
-  @Value("\${laodata.host}")
+  @Value($$"${laodata.host}")
   private val laoDataProbationIntegrationHost: String,
-  @Value("\${api.timeout:20s}")
+  @Value($$"${api.timeout:20s}")
   private val healthTimeout: Duration,
 ) {
 

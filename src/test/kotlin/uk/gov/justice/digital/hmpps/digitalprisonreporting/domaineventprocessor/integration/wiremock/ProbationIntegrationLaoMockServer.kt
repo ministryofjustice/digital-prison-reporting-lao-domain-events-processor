@@ -55,6 +55,20 @@ class ProbationIntegrationLaoMockServer : MockServer(PROBATION_INTEGRATION_LAO_W
     )
   }
 
+  fun stubGetAllCases(
+    page: Int = 0,
+    payload: String,
+  ) {
+    stubFor(
+      get("$urlPrefix/all-cases?size=1000&page=$page")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(payload).withStatus(200),
+        ),
+    )
+  }
+
   private fun createPayload(): String = """
       {
         "excludedFrom": [

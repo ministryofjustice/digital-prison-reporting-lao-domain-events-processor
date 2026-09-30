@@ -2,16 +2,12 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.persistence.EntityManager
-import kotlinx.coroutines.future.await
 import org.awaitility.Awaitility.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.kotlin.any
-import org.mockito.kotlin.times
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
@@ -32,15 +28,15 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestriction
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestrictionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.mocks.OAuthExtension
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer.setLocalStackProperties
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.InboundMessageListener
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.LaoReconciliationService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ProbationIntegrationLaoMockServer
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
 import uk.gov.justice.hmpps.sqs.MissingQueueException
-import uk.gov.justice.hmpps.sqs.MissingTopicException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 import java.time.OffsetDateTime
@@ -48,17 +44,11 @@ import java.time.ZoneId
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Import(JwtAuthorisationHelper::class, TestFlywayConfig::class)
-@ExtendWith(OAuthExtension::class)
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 abstract class IntegrationTestBase {
 
-  fun HmppsSqsProperties.inboundQueueConfig() = queues["inboundqueue"] ?: throw MissingQueueException("inboundqueue has not been loaded from configuration properties")
-
-  fun HmppsSqsProperties.inboundTopicConfig() = topics["inboundtopic"] ?: throw MissingTopicException("inboundtopic has not been loaded from configuration properties")
-
   protected val inboundQueue by lazy { hmppsQueueService.findByQueueId("inboundqueue") ?: throw MissingQueueException("HmppsQueue inboundqueue not found") }
-  protected val inboundQueueDlq by lazy { hmppsQueueService.findByQueueName("inbound-dlq") ?: throw MissingQueueException("InboundDlq does not exist") }
   private val inboundTopic by lazy { hmppsQueueService.findByTopicId("inboundtopic") ?: throw MissingQueueException("HmppsTopic inboundtopic not found") }
 
   protected val inboundSqsClient by lazy { inboundQueue.sqsClient }
@@ -85,6 +75,9 @@ abstract class IntegrationTestBase {
   @MockitoSpyBean
   protected lateinit var laoRestrictionRepository: LaoRestrictionRepository
 
+  @MockitoSpyBean
+  protected lateinit var laoReconciliationService: LaoReconciliationService
+
   @Autowired
   protected lateinit var entityManager: EntityManager
 
@@ -105,16 +98,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var webTestClient: WebTestClient
-
-  internal fun HttpHeaders.authToken(roles: List<String> = listOf("ROLE_QUEUE_ADMIN")) {
-    this.setBearerAuth(
-      jwtAuthHelper.createJwtAccessToken(
-        username = "SOME_USER",
-        roles = roles,
-        clientId = "some-client",
-      ),
-    )
-  }
 
   fun getLaoRestrictionsForCrn(crn: String): List<LaoRestriction> = jdbcTemplate.query(
     """
@@ -180,10 +163,15 @@ abstract class IntegrationTestBase {
     inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).join()
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }
     await().untilCallTo { inboundSqsDlqClient.countAllMessagesOnQueue(inboundDlqUrl).get() } matches { it == 0 }
+    hmppsAuthMockServer.resetRequests()
+    hmppsAuthMockServer.stubGrantToken()
   }
 
   companion object {
     private val localStackContainer = LocalStackContainer.instance
+
+    @JvmField
+    val hmppsAuthMockServer = HmppsAuthMockServer()
 
     @JvmStatic
     @DynamicPropertySource
@@ -203,12 +191,14 @@ abstract class IntegrationTestBase {
     @JvmStatic
     fun setupClass() {
       probationIntegrationLaoMockServer.start()
+      hmppsAuthMockServer.start()
     }
 
     @AfterAll
     @JvmStatic
     fun teardownClass() {
       probationIntegrationLaoMockServer.stop()
+      hmppsAuthMockServer.stop()
     }
   }
 }

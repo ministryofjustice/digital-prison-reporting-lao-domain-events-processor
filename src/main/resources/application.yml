@@ -78,3 +78,7 @@ management:
     info:
       cache:
         time-to-live: 2000ms
+
+batch:
+  enabled: ${BATCH_ENABLED}
+  type: ${BATCH_TYPE}
