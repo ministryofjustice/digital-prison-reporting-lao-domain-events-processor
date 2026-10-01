@@ -1,6 +1,7 @@
 generic-service:
   nameOverride: digital-prison-reporting-lao-domain-events-processor
   productId: "DPS012" # productId for the product that this belongs too, i.e. DPS001, see README.md for details
+  cronPrefixName: dpr-lao-evts-processor
 
   replicaCount: 1
 
