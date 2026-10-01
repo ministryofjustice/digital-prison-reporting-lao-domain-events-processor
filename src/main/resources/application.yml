@@ -5,8 +5,9 @@ info.app:
 spring:
   application:
     name: digital-prison-reporting-lao-domain-events-processor
-  codec:
-    max-in-memory-size: 10MB
+  http:
+    codecs:
+      max-in-memory-size: 10MB
   datasource:
     url: ${REDSHIFT_JDBC_URL}
     username: ${REDSHIFT_JDBC_USER}
