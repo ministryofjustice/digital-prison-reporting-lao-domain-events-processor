@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 import io.netty.channel.ConnectTimeoutException
 import io.netty.handler.timeout.ReadTimeoutException
 import io.netty.handler.timeout.TimeoutException
+import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientRequestException
 import org.springframework.web.reactive.function.client.WebClientResponseException
@@ -18,6 +19,10 @@ import kotlin.jvm.java
 class LaoDataProbationIntegrationClient(
   private val laoDataProbationIntegrationClient: WebClient,
 ) {
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
+
   fun getLaoData(crn: String): LaoDataResponse = laoDataProbationIntegrationClient.get()
     .uri("/case/$crn/access")
     .header("Content-Type", "application/json")
@@ -41,6 +46,7 @@ class LaoDataProbationIntegrationClient(
 
   fun getAllLaoData(): List<AllCasesContentEntry> {
     val firstRequest = getAllCasesPage(0).block()!!
+    log.info("Processing ${firstRequest.page.totalPages} pages with ${firstRequest.page.totalElements}")
     val cases = firstRequest.content
     if (firstRequest.page.totalPages <= 1) {
       return cases

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusion
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestriction
@@ -12,11 +13,19 @@ class LaoReconciliationService(
   private val laoDataUpdateService: LaoDataUpdateService,
   private val transactionalRunner: TransactionalRunner,
 ) {
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
+
   fun reconcile() {
     val allLaoData = laoDataProbationIntegrationClient.getAllLaoData()
     val crnDataMap = allLaoData.groupBy { it.crn }
+    log.info("Processing ${crnDataMap.keys.size} CRNs")
     transactionalRunner.run {
-      crnDataMap.forEach {
+      for ((idx, it) in crnDataMap.entries.withIndex()) {
+        if (idx % 10 == 0) {
+          log.info("Processed index $idx")
+        }
         laoCrnInitialisationService.insertCrnIfNeeded(it.key)
         val exclusions = it.value
           .filter { entry -> entry.type.lowercase() == "exclusion" }
