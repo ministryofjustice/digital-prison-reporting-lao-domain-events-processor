@@ -14,7 +14,7 @@ generic-service:
     host: app-hostname.local # override per environment
     tlsSecretName: hmpps-digital-prison-reporting-mi-cert
 
-  batchJobs:
+  batchjobs:
     - name: reconciliation
       type: reconciliation
       schedule: "0 3 * * *"
