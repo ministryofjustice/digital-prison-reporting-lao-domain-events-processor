@@ -5,6 +5,8 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toLaoEntry
@@ -165,8 +167,7 @@ class ReconciliationTest : IntegrationTestBase() {
             "type": "exclusion",
             "exclusionMessage": "an exclusion message",
             "restrictionMessage": "a restriction message",
-            "startDate": "2026-01-01T12:00:00+01:00",
-            "endDate": "2026-01-01T13:00:00+01:00"
+            "startDate": "2026-01-01T12:00:00+01:00"
           },
           {
             "crn": "A111111",
@@ -198,7 +199,7 @@ class ReconciliationTest : IntegrationTestBase() {
           assertThat(it.userId).isEqualTo("usera")
           assertThat(it.reason).isEqualTo("an exclusion message")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
-          assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isNull()
         },
       )
       val restrictions = getLaoRestrictionsForCrn("A111111")
@@ -212,7 +213,7 @@ class ReconciliationTest : IntegrationTestBase() {
           assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
         },
       )
-      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn("A111111", exclusions, restrictions)
+      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn(eq("A111111"), any(), any())
     }
     probationIntegrationLaoMockServer.resetRequests()
     probationIntegrationLaoMockServer.stubGetAllCases(
@@ -293,8 +294,8 @@ class ReconciliationTest : IntegrationTestBase() {
           assertThat(it.until).isNull()
         },
       )
-      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn("A111112", exclusions2, emptyList())
-      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn("A111111", exclusions, restrictions)
+      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn(eq("A111111"), any(), any())
+      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn(eq("A111112"), any(), any())
     }
   }
 

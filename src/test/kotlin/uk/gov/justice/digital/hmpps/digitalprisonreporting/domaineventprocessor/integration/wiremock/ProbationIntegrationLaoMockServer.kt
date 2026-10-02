@@ -31,30 +31,6 @@ class ProbationIntegrationLaoMockServer : MockServer(PROBATION_INTEGRATION_LAO_W
     )
   }
 
-  fun stub500ResponseSecondRequest(url: String) {
-    stubFor(
-      get("$urlPrefix/$url")
-        .inScenario("retry")
-        .whenScenarioStateIs("second")
-        .willReturn(aResponse().withStatus(500))
-        .willSetStateTo("success"),
-    )
-  }
-
-  fun stubSuccessInThirdRequest(url: String) {
-    stubFor(
-      get("$urlPrefix/$url")
-        .inScenario("retry")
-        .whenScenarioStateIs("success")
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(createPayload()),
-        ),
-    )
-  }
-
   fun stubGetAllCases(
     page: Int = 0,
     payload: String,
@@ -68,25 +44,4 @@ class ProbationIntegrationLaoMockServer : MockServer(PROBATION_INTEGRATION_LAO_W
         ),
     )
   }
-
-  private fun createPayload(): String = """
-      {
-        "excludedFrom": [
-          {
-            "username": "A111111",
-            "since": "2026-06-10T12:00:00",
-            "until": "2026-06-10T13:00:00"
-          }
-        ],
-        "restrictedTo": [
-          {
-            "username": "A111222",
-            "since": "2026-06-10T12:00:00",
-            "until": "2026-06-10T13:00:00"
-          }
-        ],
-        "exclusionMessage": "Excluded!",
-        "restrictionMessage": "Restricted"
-      }
-  """.trimIndent()
 }
