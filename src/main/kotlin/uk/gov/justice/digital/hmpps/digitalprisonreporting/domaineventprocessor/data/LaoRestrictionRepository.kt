@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.LaoEntry
 import java.sql.Timestamp
 import java.sql.Types
+import java.time.ZoneId
 import java.time.ZonedDateTime
 
 @Repository
@@ -19,6 +20,28 @@ class LaoRestrictionRepository(
     """.trimIndent(),
     crn,
   )
+
+  fun findAll(): List<LaoRestriction> = jdbcTemplate.query(
+    """
+      SELECT
+        crn,
+        user_id,
+        reason,
+        since,
+        until,
+        crn_user_id
+      FROM product_.lao_restrictions
+    """.trimIndent(),
+  ) { rs, _ ->
+    LaoRestriction(
+      rs.getString("crn"),
+      rs.getString("user_id"),
+      rs.getString("reason"),
+      rs.getTimestamp("since").toInstant().atZone(ZoneId.of("Europe/London")),
+      rs.getTimestamp("until")?.toInstant()?.atZone(ZoneId.of("Europe/London")),
+      rs.getString("crn_user_id"),
+    )
+  }
 
   fun saveAll(restrictions: Collection<LaoRestriction>) {
     jdbcTemplate.batchUpdate(
