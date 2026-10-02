@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.model.LaoEntry
 import java.sql.Timestamp
 import java.sql.Types
-import java.time.ZoneId
+import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 
 @Repository
@@ -37,8 +37,8 @@ class LaoExclusionRepository(
       rs.getString("crn"),
       rs.getString("user_id"),
       rs.getString("reason"),
-      rs.getTimestamp("since").toInstant().atZone(ZoneId.of("Europe/London")),
-      rs.getTimestamp("until")?.toInstant()?.atZone(ZoneId.of("Europe/London")),
+      rs.getObject("since", OffsetDateTime::class.java).toZonedDateTime(),
+      rs.getObject("until", OffsetDateTime::class.java)?.toZonedDateTime(),
       rs.getString("crn_user_id"),
     )
   }

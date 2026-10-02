@@ -5,6 +5,8 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toLaoEntry
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -111,8 +113,7 @@ class ReconciliationTest : IntegrationTestBase() {
             "type": "exclusion",
             "exclusionMessage": "an exclusion message",
             "restrictionMessage": "a restriction message",
-            "startDate": "2026-01-01T12:00:00+01:00",
-            "endDate": "2026-01-01T13:00:00+01:00"
+            "startDate": "2026-01-01T12:00:00+01:00"
           }
         ],
         "page": {
@@ -144,10 +145,156 @@ class ReconciliationTest : IntegrationTestBase() {
           assertThat(it.userId).isEqualTo("userb")
           assertThat(it.reason).isEqualTo("an exclusion message")
           assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
-          assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isNull()
         },
       )
       assertThat(getLaoRestrictionsForCrn("A111111").size).isEqualTo(0)
+    }
+  }
+
+  @Test
+  fun `when running reconciliation twice, should only run for crns that changed`() {
+    probationIntegrationLaoMockServer.stubGetAllCases(
+      page = 0,
+      payload = """
+      {
+        "content": [
+          {
+            "crn": "A111111",
+            "username": "usera",
+            "type": "exclusion",
+            "exclusionMessage": "an exclusion message",
+            "restrictionMessage": "a restriction message",
+            "startDate": "2026-01-01T12:00:00+01:00",
+            "endDate": "2026-01-01T13:00:00+01:00"
+          },
+          {
+            "crn": "A111111",
+            "username": "userb",
+            "type": "restriction",
+            "exclusionMessage": "an exclusion message",
+            "restrictionMessage": "a restriction message",
+            "startDate": "2026-01-01T12:00:00+01:00",
+            "endDate": "2026-01-01T13:00:00+01:00"
+          }
+        ],
+        "page": {
+          "size": 1,
+          "number": 1,
+          "totalElements": 1,
+          "totalPages": 1
+        }
+      }
+      """.trimIndent(),
+    )
+    laoReconciliationService.reconcile()
+    await().untilAsserted {
+      val exclusions = getLaoExclusionsForCrn("A111111")
+      assertThat(exclusions.size).isEqualTo(1)
+
+      assertThat(exclusions.first().toLaoEntry()).satisfies(
+        {
+          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.userId).isEqualTo("usera")
+          assertThat(it.reason).isEqualTo("an exclusion message")
+          assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
+        },
+      )
+      val restrictions = getLaoRestrictionsForCrn("A111111")
+      assertThat(restrictions.size).isEqualTo(1)
+      assertThat(restrictions.first().toLaoEntry()).satisfies(
+        {
+          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.userId).isEqualTo("userb")
+          assertThat(it.reason).isEqualTo("a restriction message")
+          assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
+        },
+      )
+      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn("A111111", exclusions, restrictions)
+    }
+    probationIntegrationLaoMockServer.resetRequests()
+    probationIntegrationLaoMockServer.stubGetAllCases(
+      page = 0,
+      payload = """
+      {
+        "content": [
+          {
+            "crn": "A111111",
+            "username": "usera",
+            "type": "exclusion",
+            "exclusionMessage": "an exclusion message",
+            "restrictionMessage": "a restriction message",
+            "startDate": "2026-01-01T12:00:00+01:00"
+          },
+          {
+            "crn": "A111111",
+            "username": "userb",
+            "type": "restriction",
+            "exclusionMessage": "an exclusion message",
+            "restrictionMessage": "a restriction message",
+            "startDate": "2026-01-01T12:00:00+01:00",
+            "endDate": "2026-01-01T13:00:00+01:00"
+          },
+          {
+            "crn": "A111112",
+            "username": "userb",
+            "type": "exclusion",
+            "exclusionMessage": "an exclusion message",
+            "restrictionMessage": "a restriction message",
+            "startDate": "2026-01-01T12:00:00+01:00"
+          }
+        ],
+        "page": {
+          "size": 1,
+          "number": 1,
+          "totalElements": 1,
+          "totalPages": 1
+        }
+      }
+      """.trimIndent(),
+    )
+    laoReconciliationService.reconcile()
+    await().untilAsserted {
+      val exclusions = getLaoExclusionsForCrn("A111111")
+      assertThat(exclusions.size).isEqualTo(1)
+
+      assertThat(exclusions.first().toLaoEntry()).satisfies(
+        {
+          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.userId).isEqualTo("usera")
+          assertThat(it.reason).isEqualTo("an exclusion message")
+          assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isNull()
+        },
+      )
+      val restrictions = getLaoRestrictionsForCrn("A111111")
+      assertThat(restrictions.size).isEqualTo(1)
+      assertThat(restrictions.first().toLaoEntry()).satisfies(
+        {
+          assertThat(it.crn).isEqualTo("A111111")
+          assertThat(it.userId).isEqualTo("userb")
+          assertThat(it.reason).isEqualTo("a restriction message")
+          assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
+        },
+      )
+
+      val exclusions2 = getLaoExclusionsForCrn("A111112")
+      assertThat(exclusions2.size).isEqualTo(1)
+
+      assertThat(exclusions2.first().toLaoEntry()).satisfies(
+        {
+          assertThat(it.crn).isEqualTo("A111112")
+          assertThat(it.userId).isEqualTo("userb")
+          assertThat(it.reason).isEqualTo("an exclusion message")
+          assertThat(it.since).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 12, 0, 0), ZoneId.of("+01:00")))
+          assertThat(it.until).isNull()
+        },
+      )
+      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn("A111112", exclusions2, emptyList())
+      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn("A111111", exclusions, restrictions)
     }
   }
 

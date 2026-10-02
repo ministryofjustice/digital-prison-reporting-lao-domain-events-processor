@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.testcontainers.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.InboundMessageListener
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.LaoDataUpdateService
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service.LaoReconciliationService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ProbationIntegrationLaoMockServer
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -39,8 +40,6 @@ import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
-import java.time.OffsetDateTime
-import java.time.ZoneId
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Import(JwtAuthorisationHelper::class, TestFlywayConfig::class)
@@ -78,6 +77,9 @@ abstract class IntegrationTestBase {
   @MockitoSpyBean
   protected lateinit var laoReconciliationService: LaoReconciliationService
 
+  @MockitoSpyBean
+  protected lateinit var laoDataUpdateService: LaoDataUpdateService
+
   @Autowired
   protected lateinit var entityManager: EntityManager
 
@@ -99,55 +101,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var webTestClient: WebTestClient
 
-  fun getLaoRestrictionsForCrn(crn: String): List<LaoRestriction> = jdbcTemplate.query(
-    """
-      SELECT
-        crn,
-        user_id,
-        reason,
-        since,
-        until,
-        crn_user_id
-      FROM product_.lao_restrictions
-      WHERE crn = ?
-    """.trimIndent(),
-    { rs, _ ->
-      LaoRestriction(
-        crn = rs.getString("crn"),
-        userId = rs.getString("user_id"),
-        reason = rs.getString("reason"),
-        since = rs.getTimestamp("since").toInstant().atZone(ZoneId.of("Europe/London")),
-        until = rs.getTimestamp("until").toInstant().atZone(ZoneId.of("Europe/London")),
-        crnUserId = rs.getString("crn_user_id"),
-      )
-    },
-    crn,
-  )
+  fun getLaoRestrictionsForCrn(crn: String): List<LaoRestriction> = laoRestrictionRepository.findAll().filter { it.crn == crn }
 
-  fun getLaoExclusionsForCrn(crn: String): List<LaoExclusion> = jdbcTemplate.query(
-    """
-      SELECT
-        crn,
-        user_id,
-        reason,
-        since,
-        until,
-        crn_user_id
-      FROM product_.lao_exclusions
-      WHERE crn = ?
-    """.trimIndent(),
-    { rs, _ ->
-      LaoExclusion(
-        crn = rs.getString("crn"),
-        userId = rs.getString("user_id"),
-        reason = rs.getString("reason"),
-        since = rs.getObject("since", OffsetDateTime::class.java).toZonedDateTime(),
-        until = rs.getObject("until", OffsetDateTime::class.java)?.toZonedDateTime(),
-        crnUserId = rs.getString("crn_user_id"),
-      )
-    },
-    crn,
-  )
+  fun getLaoExclusionsForCrn(crn: String): List<LaoExclusion> = laoExclusionRepository.findAll().filter { it.crn == crn }
 
   protected fun jsonString(any: Any): String? = jsonMapper.writeValueAsString(any)
 

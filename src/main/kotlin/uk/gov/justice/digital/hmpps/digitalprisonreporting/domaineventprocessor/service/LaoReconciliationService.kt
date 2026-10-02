@@ -28,75 +28,46 @@ class LaoReconciliationService(
 
     val allLocalExclusions = laoExclusionRepository.findAll()
     val liveExclusionsByCrn = allLiveLaoData.filter { it.type.lowercase() == "exclusion" }.groupBy { it.crn }
-    val missingExclusions = liveExclusionsByCrn.filter {
-      val liveLaoExclusionsForCrn = it.value.map { entry ->
-        LaoExclusion(
-          it.key,
-          entry.username,
-          entry.exclusionMessage,
-          entry.startDate,
-          entry.endDate,
-          "${it.key}:${entry.username}",
-        )
-      }
-      !allLocalExclusions.containsAll(liveLaoExclusionsForCrn)
+    val liveLaoExclusions = liveExclusionsByCrn.values.flatten().map {
+      LaoExclusion(
+        it.crn,
+        it.username,
+        it.exclusionMessage,
+        it.startDate,
+        it.endDate,
+        "${it.crn}:${it.username}",
+      )
     }
+    val missingExclusions = liveLaoExclusions.minus(allLocalExclusions)
 
     val allLocalRestrictions = laoRestrictionRepository.findAll()
     val liveRestrictionsByCrn = allLiveLaoData.filter { it.type.lowercase() == "restriction" }.groupBy { it.crn }
-    val missingRestrictions = liveRestrictionsByCrn.filter {
-      val liveLaoRestrictionsForCrn = it.value.map { entry ->
-        LaoRestriction(
-          it.key,
-          entry.username,
-          entry.exclusionMessage,
-          entry.startDate,
-          entry.endDate,
-          "${it.key}:${entry.username}",
-        )
-      }
-      !allLocalRestrictions.containsAll(liveLaoRestrictionsForCrn)
+    val liveLaoRestrictions = liveRestrictionsByCrn.values.flatten().map {
+      LaoRestriction(
+        it.crn,
+        it.username,
+        it.restrictionMessage,
+        it.startDate,
+        it.endDate,
+        "${it.crn}:${it.username}",
+      )
     }
+    val missingRestrictions = liveLaoRestrictions.minus(allLocalRestrictions)
 
-    log.info("Processing ${missingExclusions.keys.size} missing excl")
-    log.info("Processing ${missingRestrictions.keys.size} missing restr")
+    log.info("Processing ${missingExclusions.size} missing excl")
+    log.info("Processing ${missingRestrictions.size} missing restr")
 
-    val crnsToReconcile = missingRestrictions.keys.plus(missingExclusions.keys).toSet()
+    val crnsToReconcile = missingRestrictions.map { it.crn }.plus(missingExclusions.map { it.crn }).toSet()
     transactionalRunner.run {
-      crnsToReconcile.forEachIndexed { idx, it ->
+      crnsToReconcile.forEachIndexed { idx, crn ->
         if (idx % 10 == 0) {
           log.info("Processed index $idx")
         }
-        laoCrnInitialisationService.insertCrnIfNeeded(it)
-        // We need to re-fetch these because it's possible a crn only had restrictions or only exclusions change, in which case the filtering
-        // we did previously may filter out one side of these from the missingRestrictions/missingExclusions
-        val laoExclusions = liveExclusionsByCrn[it]
-          ?.filter { it.type.lowercase() == "exclusion" }
-          ?.map {
-            LaoExclusion(
-              it.crn,
-              it.username,
-              it.exclusionMessage,
-              it.startDate,
-              it.endDate,
-              "${it.crn}:${it.username}",
-            )
-          }
-          .orEmpty()
-        val laoRestrictions = liveRestrictionsByCrn[it]
-          ?.filter { it.type.lowercase() == "restriction" }
-          ?.map {
-            LaoRestriction(
-              it.crn,
-              it.username,
-              it.restrictionMessage,
-              it.startDate,
-              it.endDate,
-              "${it.crn}:${it.username}",
-            )
-          }
-          .orEmpty()
-        laoDataUpdateService.saveLaoDataForCrn(it, laoExclusions, laoRestrictions)
+        laoCrnInitialisationService.insertCrnIfNeeded(crn)
+
+        val laoExclusions = liveLaoExclusions.filter { it.crn == crn }
+        val laoRestrictions = liveLaoRestrictions.filter { it.crn == crn }
+        laoDataUpdateService.saveLaoDataForCrn(crn, laoExclusions, laoRestrictions)
       }
     }
   }
