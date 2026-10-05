@@ -63,6 +63,12 @@ hmpps:
         arn: ${HMPPS_SQS_TOPICS_INBOUNDTOPIC_ARN}
 
 management:
+  metrics:
+    web:
+      client:
+        max-uri-tags: 300
+      server:
+        max-uri-tags: 300
   endpoints:
     web:
       base-path: /
