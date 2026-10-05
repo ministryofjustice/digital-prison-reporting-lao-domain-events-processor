@@ -45,8 +45,14 @@ class LaoReconciliationService(
     log.info("Got exclusion data")
 
     val allLocalRestrictions = laoRestrictionRepository.findAll()
-    val liveRestrictionsByCrn = allLiveLaoData.filter { it.type.lowercase() == "restriction" }.groupBy { it.crn }
-    val liveLaoRestrictions = liveRestrictionsByCrn.values.flatten().map {
+    log.info("Got local restrictions")
+    val filteredLiveRestrictions = allLiveLaoData.filter { it.type.lowercase() == "restriction" }
+    log.info("Filtered live restrictions")
+    val liveRestrictionsByCrn = filteredLiveRestrictions.groupBy { it.crn }
+    log.info("Grouped live restrictions")
+    val flattenedLiveRestrictions = liveRestrictionsByCrn.values.flatten()
+    log.info("Flattened live restrictions")
+    val liveLaoRestrictions = flattenedLiveRestrictions.map {
       LaoRestriction(
         it.crn,
         it.username,
@@ -56,7 +62,21 @@ class LaoReconciliationService(
         "${it.crn}:${it.username}",
       )
     }
+    log.info("Mapped live restrictions")
+
+    val localSet = allLocalRestrictions.toHashSet()
+
+    val start = System.currentTimeMillis()
+
+    val missingRestrictionsAsHashSet =
+      liveLaoRestrictions.filter { it !in localSet }
+
+    log.info("diff took {}ms", System.currentTimeMillis() - start)
+
+    log.info("starting minus, ${missingRestrictionsAsHashSet.size} was size of missing restrictions")
     val missingRestrictions = liveLaoRestrictions.minus(allLocalRestrictions)
+    log.info("finished diffing")
+
     log.info("Got restriction data")
 
     val crnsToReconcile = missingRestrictions.map { it.crn }.plus(missingExclusions.map { it.crn }).toSet()
