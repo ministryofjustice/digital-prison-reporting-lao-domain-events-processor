@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientRequestException
 import org.springframework.web.reactive.function.client.WebClientResponseException
-import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
@@ -51,16 +50,22 @@ class LaoDataProbationIntegrationClient(
     if (firstRequest.page.totalPages <= 1) {
       return cases
     }
-    val pages = Flux.fromIterable((1..<firstRequest.page.totalPages))
-      .buffer(10)
-      .concatMap { batch ->
+    val pages = Flux.fromIterable((1..<firstRequest.page.totalPages).chunked(10).withIndex())
+      .concatMap { (batchNumber, batch) ->
         Flux.fromIterable(batch)
           .flatMapSequential { getAllCasesPage(it) }
           .collectList()
+          .doOnNext {
+            if (batchNumber % 10 == 0) {
+              log.info("Batch $batchNumber done")
+            }
+          }
       }
       .flatMapIterable { it }
       .collectList()
       .block()!!
+
+    log.info("Finished doing API calls")
 
     pages.add(firstRequest)
     return pages.flatMap({ it.content })

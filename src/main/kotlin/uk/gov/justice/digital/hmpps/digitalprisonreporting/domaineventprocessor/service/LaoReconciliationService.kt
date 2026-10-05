@@ -42,6 +42,7 @@ class LaoReconciliationService(
       )
     }
     val missingExclusions = liveLaoExclusions.minus(allLocalExclusions)
+    log.info("Got exclusion data")
 
     val allLocalRestrictions = laoRestrictionRepository.findAll()
     val liveRestrictionsByCrn = allLiveLaoData.filter { it.type.lowercase() == "restriction" }.groupBy { it.crn }
@@ -56,6 +57,7 @@ class LaoReconciliationService(
       )
     }
     val missingRestrictions = liveLaoRestrictions.minus(allLocalRestrictions)
+    log.info("Got restriction data")
 
     val crnsToReconcile = missingRestrictions.map { it.crn }.plus(missingExclusions.map { it.crn }).toSet()
 
