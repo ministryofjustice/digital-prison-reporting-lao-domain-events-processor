@@ -15,6 +15,11 @@ generic-service:
     startupOverride: "40 7 * * 1-5" # Start at 7.40am UTC Monday-Friday
     shutdownOverride: "20 20 * * 1-5" # Stop at 8.20pm UTC Monday-Friday
 
+  batchjobs:
+    - name: reconciliation
+      type: reconciliation
+      schedule: "30 19 * * *"
+
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:

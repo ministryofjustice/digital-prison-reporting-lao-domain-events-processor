@@ -11,6 +11,11 @@ generic-service:
     HMPPS_AUTH_URL: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
     LAODATA_HOST: "https://probation-access-control-dev.hmpps.service.justice.gov.uk"
 
+  batchjobs:
+    - name: reconciliation
+      type: reconciliation
+      schedule: "30 19 * * *"
+
   scheduledDowntime:
     enabled: true
     startupOverride: '40 7 * * 1-5' # Start at 7.40am UTC Monday-Friday

@@ -15,11 +15,6 @@ generic-service:
     host: app-hostname.local # override per environment
     tlsSecretName: hmpps-digital-prison-reporting-mi-cert
 
-  batchjobs:
-    - name: reconciliation
-      type: reconciliation
-      schedule: "0 3 * * *"
-
   # Environment variables to load into the deployment
   env:
     SERVER_PORT: "8080"
