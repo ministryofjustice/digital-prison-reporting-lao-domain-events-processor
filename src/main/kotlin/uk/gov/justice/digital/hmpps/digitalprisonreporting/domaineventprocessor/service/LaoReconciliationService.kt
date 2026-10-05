@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.service
 
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrnRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusion
@@ -18,6 +19,8 @@ class LaoReconciliationService(
   private val laoCrnRepository: LaoCrnRepository,
   private val laoExclusionRepository: LaoExclusionRepository,
   private val laoRestrictionRepository: LaoRestrictionRepository,
+  @Value("batch.dryrun")
+  private val dryRun: Boolean = false
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -54,10 +57,16 @@ class LaoReconciliationService(
     }
     val missingRestrictions = liveLaoRestrictions.minus(allLocalRestrictions)
 
+    val crnsToReconcile = missingRestrictions.map { it.crn }.plus(missingExclusions.map { it.crn }).toSet()
+
     log.info("Processing ${missingExclusions.size} missing excl")
     log.info("Processing ${missingRestrictions.size} missing restr")
+    log.info("Processing ${crnsToReconcile.size} crns")
 
-    val crnsToReconcile = missingRestrictions.map { it.crn }.plus(missingExclusions.map { it.crn }).toSet()
+    if (dryRun) {
+      log.info("Doing dryrun, exiting.")
+      return
+    }
     transactionalRunner.run {
       crnsToReconcile.forEachIndexed { idx, crn ->
         if (idx % 10 == 0) {

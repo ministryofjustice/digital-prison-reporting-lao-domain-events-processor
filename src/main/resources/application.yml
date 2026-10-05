@@ -89,3 +89,4 @@ management:
 batch:
   enabled: ${BATCH_ENABLED:false}
   type: ${BATCH_TYPE:}
+  dryrun: ${DRYRUN:false}

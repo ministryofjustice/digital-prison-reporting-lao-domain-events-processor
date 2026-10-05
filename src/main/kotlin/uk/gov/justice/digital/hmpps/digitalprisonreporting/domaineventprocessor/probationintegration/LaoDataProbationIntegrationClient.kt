@@ -52,7 +52,13 @@ class LaoDataProbationIntegrationClient(
       return cases
     }
     val pages = Flux.fromIterable((1..<firstRequest.page.totalPages))
-      .flatMap({ getAllCasesPage(it) }, firstRequest.page.totalPages)
+      .buffer(10)
+      .concatMap { batch ->
+        Flux.fromIterable(batch)
+          .flatMapSequential { getAllCasesPage(it) }
+          .collectList()
+      }
+      .flatMapIterable { it }
       .collectList()
       .block()!!
 

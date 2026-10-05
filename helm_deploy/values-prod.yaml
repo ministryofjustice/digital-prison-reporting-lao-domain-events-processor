@@ -9,6 +9,7 @@ generic-service:
   env:
     HMPPS_AUTH_URL: "https://sign-in.hmpps.service.justice.gov.uk/auth"
     LAODATA_HOST: "https://probation-access-control.hmpps.service.justice.gov.uk"
+    DRYRUN: true
 
   batchjobs:
     - name: reconciliation
