@@ -13,6 +13,7 @@ import java.time.ZonedDateTime
 class LaoExclusionRepository(
   val jdbcTemplate: JdbcTemplate,
 ) {
+  private val utcZone = ZoneId.of("Z")
   fun deleteByCrn(crn: String): Int = jdbcTemplate.update(
     """
       DELETE FROM product_.lao_exclusions
@@ -38,8 +39,8 @@ class LaoExclusionRepository(
       rs.getString("crn"),
       rs.getString("user_id"),
       rs.getString("reason"),
-      ZonedDateTime.ofInstant(rs.getTimestamp("since").toInstant(), ZoneId.of("Z")),
-      if (until != null) ZonedDateTime.ofInstant(until.toInstant(), ZoneId.of("Z")) else null,
+      ZonedDateTime.ofInstant(rs.getTimestamp("since").toInstant(), utcZone),
+      if (until != null) ZonedDateTime.ofInstant(until.toInstant(), utcZone) else null,
       rs.getString("crn_user_id"),
     )
   }
