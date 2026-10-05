@@ -20,7 +20,7 @@ class LaoReconciliationService(
   private val laoExclusionRepository: LaoExclusionRepository,
   private val laoRestrictionRepository: LaoRestrictionRepository,
   @Value("batch.dryrun")
-  private val dryRun: Boolean = false
+  private val dryRun: Boolean = false,
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
