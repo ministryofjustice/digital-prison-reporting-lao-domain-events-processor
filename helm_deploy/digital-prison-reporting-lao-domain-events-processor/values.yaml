@@ -25,7 +25,7 @@ generic-service:
     SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE: "org.apache.catalina.connector.ClientAbortException"
     SPRINGDOC_API-DOCS_ENABLED: "false"
     SPRINGDOC_SWAGGER-UI_ENABLED: "false"
-    DRYRUN: false
+    DRYRUN: "false"
 
   namespace_secrets:
     digital-prison-reporting-lao-domain-events-processor-client-creds:

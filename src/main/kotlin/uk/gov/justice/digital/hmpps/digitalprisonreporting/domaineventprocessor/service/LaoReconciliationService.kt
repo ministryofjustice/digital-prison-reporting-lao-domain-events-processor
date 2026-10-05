@@ -20,7 +20,7 @@ class LaoReconciliationService(
   private val laoExclusionRepository: LaoExclusionRepository,
   private val laoRestrictionRepository: LaoRestrictionRepository,
   @Value("batch.dryrun")
-  private val dryRun: Boolean = false,
+  private val dryRun: String = "false",
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -63,7 +63,7 @@ class LaoReconciliationService(
     log.info("Processing ${missingRestrictions.size} missing restr")
     log.info("Processing ${crnsToReconcile.size} crns")
 
-    if (dryRun) {
+    if (dryRun == "true") {
       log.info("Doing dryrun, exiting.")
       return
     }
