@@ -22,8 +22,19 @@ class LaoExclusionRepository(
     crn,
   )
 
-  fun findAll(): List<LaoExclusion> = jdbcTemplate.query(
-    """
+  fun deleteAllByCrns(crns: List<String>): Int {
+    val crnValues = crns.joinToString(",") { "?" }
+    return jdbcTemplate.update(
+      """
+      DELETE FROM product_.lao_exclusions
+      WHERE crn in ($crnValues)
+      """.trimIndent(),
+      *crns.toTypedArray(),
+    )
+  }
+
+  fun findAll(): List<LaoExclusion> {
+    val sql = """
       SELECT
         crn,
         user_id,
@@ -32,17 +43,20 @@ class LaoExclusionRepository(
         until,
         crn_user_id
       FROM product_.lao_exclusions
-    """.trimIndent(),
-  ) { rs, _ ->
-    val until = rs.getTimestamp("until")
-    LaoExclusion(
-      rs.getString("crn"),
-      rs.getString("user_id"),
-      rs.getString("reason"),
-      ZonedDateTime.ofInstant(rs.getTimestamp("since").toInstant(), utcZone),
-      if (until != null) ZonedDateTime.ofInstant(until.toInstant(), utcZone) else null,
-      rs.getString("crn_user_id"),
-    )
+    """.trimIndent()
+    return time("Full mapping - exclusions") {
+      jdbcTemplate.query(sql) { rs, _ ->
+        val until = rs.getTimestamp("until")
+        LaoExclusion(
+          rs.getString("crn"),
+          rs.getString("user_id"),
+          rs.getString("reason"),
+          ZonedDateTime.ofInstant(rs.getTimestamp("since").toInstant(), utcZone),
+          if (until != null) ZonedDateTime.ofInstant(until.toInstant(), utcZone) else null,
+          rs.getString("crn_user_id"),
+        )
+      }
+    }
   }
 
   fun saveAll(exclusions: Collection<LaoExclusion>) {

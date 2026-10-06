@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrn
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrnRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusion
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
@@ -15,8 +16,8 @@ class LaoReconciliationService(
   private val laoDataProbationIntegrationClient: LaoDataProbationIntegrationClient,
   private val laoCrnInitialisationService: LaoCrnInitialisationService,
   private val laoDataUpdateService: LaoDataUpdateService,
-  private val transactionalRunner: TransactionalRunner,
   private val laoCrnRepository: LaoCrnRepository,
+  private val transactionalRunner: TransactionalRunner,
   private val laoExclusionRepository: LaoExclusionRepository,
   private val laoRestrictionRepository: LaoRestrictionRepository,
   @Value("batch.dryrun")
@@ -29,76 +30,98 @@ class LaoReconciliationService(
   fun reconcile() {
     val allLiveLaoData = laoDataProbationIntegrationClient.getAllLaoData()
 
+    val liveLaoExclusionsByCrn = allLiveLaoData
+      .asSequence()
+      .filter { it.type.equals("exclusion", ignoreCase = true) }
+      .map {
+        LaoExclusion(
+          it.crn,
+          it.username,
+          it.exclusionMessage,
+          it.startDate,
+          it.endDate,
+          "${it.crn}:${it.username}",
+        )
+      }
+      .groupBy { it.crn }
+    val liveLaoExclusions = liveLaoExclusionsByCrn.values.flatten()
+
     val allLocalExclusions = laoExclusionRepository.findAll()
-    val liveExclusionsByCrn = allLiveLaoData.filter { it.type.lowercase() == "exclusion" }.groupBy { it.crn }
-    val liveLaoExclusions = liveExclusionsByCrn.values.flatten().map {
-      LaoExclusion(
-        it.crn,
-        it.username,
-        it.exclusionMessage,
-        it.startDate,
-        it.endDate,
-        "${it.crn}:${it.username}",
-      )
-    }
-    val missingExclusions = liveLaoExclusions.minus(allLocalExclusions)
+    val allLocalExclusionsHashSet = allLocalExclusions.toHashSet()
+
+    log.info("Finding missing exclusions")
+    val missingExclusionsAsHashSet = liveLaoExclusions.filter { it !in allLocalExclusionsHashSet }
     log.info("Got exclusion data")
 
+    val liveLaoRestrictionsByCrn = allLiveLaoData
+      .asSequence()
+      .filter { it.type.equals("restriction", ignoreCase = true) }
+      .map {
+        LaoRestriction(
+          it.crn,
+          it.username,
+          it.restrictionMessage,
+          it.startDate,
+          it.endDate,
+          "${it.crn}:${it.username}",
+        )
+      }
+      .groupBy { it.crn }
+    val liveLaoRestrictions = liveLaoRestrictionsByCrn.values.flatten()
+
     val allLocalRestrictions = laoRestrictionRepository.findAll()
-    log.info("Got local restrictions")
-    val filteredLiveRestrictions = allLiveLaoData.filter { it.type.lowercase() == "restriction" }
-    log.info("Filtered live restrictions")
-    val liveRestrictionsByCrn = filteredLiveRestrictions.groupBy { it.crn }
-    log.info("Grouped live restrictions")
-    val flattenedLiveRestrictions = liveRestrictionsByCrn.values.flatten()
-    log.info("Flattened live restrictions")
-    val liveLaoRestrictions = flattenedLiveRestrictions.map {
-      LaoRestriction(
-        it.crn,
-        it.username,
-        it.restrictionMessage,
-        it.startDate,
-        it.endDate,
-        "${it.crn}:${it.username}",
-      )
-    }
-    log.info("Mapped live restrictions")
+    val allLocalRestrictionsHashSet = allLocalRestrictions.toHashSet()
 
-    val localSet = allLocalRestrictions.toHashSet()
-
-    val start = System.currentTimeMillis()
-
-    val missingRestrictionsAsHashSet =
-      liveLaoRestrictions.filter { it !in localSet }
-
-    log.info("diff took {}ms", System.currentTimeMillis() - start)
-
-    log.info("starting minus, ${missingRestrictionsAsHashSet.size} was size of missing restrictions")
-    val missingRestrictions = liveLaoRestrictions.minus(allLocalRestrictions)
-    log.info("finished diffing")
-
+    log.info("Finding missing restrictions")
+    val missingRestrictionsAsHashSet = liveLaoRestrictions.filter { it !in allLocalRestrictionsHashSet }
     log.info("Got restriction data")
 
-    val crnsToReconcile = missingRestrictions.map { it.crn }.plus(missingExclusions.map { it.crn }).toSet()
+    val crnsToReconcile = missingRestrictionsAsHashSet.map { it.crn }.plus(missingExclusionsAsHashSet.map { it.crn }).toSet()
 
-    log.info("Processing ${missingExclusions.size} missing excl")
-    log.info("Processing ${missingRestrictions.size} missing restr")
+    log.info("Processing ${missingExclusionsAsHashSet.size} missing excl")
+    log.info("Processing ${missingRestrictionsAsHashSet.size} missing restr")
     log.info("Processing ${crnsToReconcile.size} crns")
+
+    val existingCrns = laoCrnRepository.findAll().map { it.crn }.toHashSet()
+    log.info("Found existing crns: ${existingCrns.size}")
+    val missingCrns = (liveLaoExclusionsByCrn.keys + liveLaoRestrictionsByCrn.keys).toHashSet() - existingCrns
+    log.info("Found missing crns: ${missingCrns.size}")
 
     if (dryRun == "true") {
       log.info("Doing dryrun, exiting.")
       return
     }
-    transactionalRunner.run {
-      crnsToReconcile.forEachIndexed { idx, crn ->
-        if (idx % 10 == 0) {
-          log.info("Processed index $idx")
-        }
-        laoCrnInitialisationService.insertCrnIfNeeded(crn)
 
-        val laoExclusions = liveLaoExclusions.filter { it.crn == crn }
-        val laoRestrictions = liveLaoRestrictions.filter { it.crn == crn }
-        laoDataUpdateService.saveLaoDataForCrn(crn, laoExclusions, laoRestrictions)
+    log.info("adding missing crns")
+    missingCrns.chunked(500).forEachIndexed { index, chunk ->
+      log.info("Chunk $index of missing crns")
+      laoCrnRepository.saveAll(
+        chunk.map {
+          LaoCrn(
+            crn = it,
+            version = 0,
+          )
+        },
+      )
+    }
+    log.info("finished adding missing crns")
+
+    log.info("Starting to reconcile restrictions and exclusions")
+    crnsToReconcile.chunked(500).forEachIndexed { idx, crnChunk ->
+      log.info("Chunk $idx of crns to reconcile restrictions and exclusions of")
+      transactionalRunner.run {
+        log.info("Processed index $idx")
+        val exclusions = crnChunk.flatMap { liveLaoExclusionsByCrn[it].orEmpty() }
+        val restrictions = crnChunk.flatMap { liveLaoRestrictionsByCrn[it].orEmpty() }
+
+        if (exclusions.isNotEmpty()) {
+          laoExclusionRepository.deleteAllByCrns(crnChunk)
+          laoExclusionRepository.saveAll(exclusions)
+        }
+        if (restrictions.isNotEmpty()) {
+          laoRestrictionRepository.deleteAllByCrns(crnChunk)
+          laoRestrictionRepository.saveAll(restrictions)
+        }
       }
     }
   }

@@ -113,8 +113,14 @@ abstract class IntegrationTestBase {
     scopes: List<String> = listOf("read"),
   ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(username = username, scope = scopes, roles = roles)
 
+  internal fun LaoRestrictionRepository.deleteAll() = this.jdbcTemplate.update("DELETE FROM product_.lao_restrictions")
+  internal fun LaoExclusionRepository.deleteAll() = this.jdbcTemplate.update("DELETE FROM product_.lao_exclusions")
+
   @BeforeEach
   fun setup() {
+    laoCrnRepository.deleteAll()
+    laoRestrictionRepository.deleteAll()
+    laoExclusionRepository.deleteAll()
     inboundSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundQueueUrl).build()).join()
     inboundSqsDlqClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(inboundDlqUrl).build()).join()
     await().untilCallTo { inboundSqsClient.countAllMessagesOnQueue(inboundQueueUrl).get() } matches { it == 0 }

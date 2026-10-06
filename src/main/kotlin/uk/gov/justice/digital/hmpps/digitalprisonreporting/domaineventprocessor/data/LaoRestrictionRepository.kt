@@ -22,11 +22,15 @@ class LaoRestrictionRepository(
     crn,
   )
 
-  private fun <T> time(label: String, block: () -> T): T {
-    val start = System.currentTimeMillis()
-    return block().also {
-      println("$label took ${System.currentTimeMillis() - start}ms")
-    }
+  fun deleteAllByCrns(crns: List<String>): Int {
+    val crnValues = crns.joinToString(",") { "?" }
+    return jdbcTemplate.update(
+      """
+      DELETE FROM product_.lao_restrictions
+      WHERE crn in ($crnValues)
+      """.trimIndent(),
+      *crns.toTypedArray(),
+    )
   }
 
   fun findAll(): List<LaoRestriction> {
@@ -41,49 +45,7 @@ class LaoRestrictionRepository(
         FROM product_.lao_restrictions
     """.trimIndent()
 
-    time("No mapping") {
-      jdbcTemplate.query(sql) { _, _ -> null }
-    }
-
-    time("1 string") {
-      jdbcTemplate.query(sql) { rs, _ ->
-        rs.getString("crn")
-      }
-    }
-
-    time("All strings") {
-      jdbcTemplate.query(sql) { rs, _ ->
-        listOf(
-          rs.getString("crn"),
-          rs.getString("user_id"),
-          rs.getString("reason"),
-          rs.getString("crn_user_id"),
-        )
-      }
-    }
-
-    time("Timestamp only") {
-      jdbcTemplate.query(sql) { rs, _ ->
-        rs.getTimestamp("since")
-        rs.getTimestamp("until")
-      }
-    }
-
-    time("Timestamp only but as strings") {
-      jdbcTemplate.query(sql) { rs, _ ->
-        rs.getString("since")
-        rs.getString("until")
-      }
-    }
-
-    time("Timestamp -> Instant") {
-      jdbcTemplate.query(sql) { rs, _ ->
-        rs.getTimestamp("since")?.toInstant()
-        rs.getTimestamp("until")?.toInstant()
-      }
-    }
-
-    return time("Full mapping") {
+    return time("Full mapping - restrictions") {
       jdbcTemplate.query(sql) { rs, _ ->
         LaoRestriction(
           rs.getString("crn"),

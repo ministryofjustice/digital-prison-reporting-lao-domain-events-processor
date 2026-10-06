@@ -5,10 +5,12 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrn
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusion
+import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoRestriction
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.toLaoEntry
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -213,7 +215,31 @@ class ReconciliationTest : IntegrationTestBase() {
           assertThat(it.until).isEqualTo(ZonedDateTime.of(LocalDateTime.of(2026, 1, 1, 13, 0, 0), ZoneId.of("+01:00")))
         },
       )
-      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn(eq("A111111"), any(), any())
+      verify(laoCrnRepository, times(1)).saveAll(
+        argThat<List<LaoCrn>> { crns ->
+          crns.size == 1 && crns[0].crn == "A111111"
+        },
+      )
+      verify(laoRestrictionRepository, times(1)).saveAll(
+        argThat<List<LaoRestriction>> { crns ->
+          crns.size == 1 && crns[0].crn == "A111111" && crns[0].userId == "userb"
+        },
+      )
+      verify(laoRestrictionRepository, times(1)).deleteAllByCrns(
+        argThat<List<String>> { crns ->
+          crns.size == 1 && crns[0] == "A111111"
+        },
+      )
+      verify(laoExclusionRepository, times(1)).saveAll(
+        argThat<List<LaoExclusion>> { crns ->
+          crns.size == 1 && crns[0].crn == "A111111" && crns[0].userId == "usera"
+        },
+      )
+      verify(laoExclusionRepository, times(1)).deleteAllByCrns(
+        argThat<List<String>> { crns ->
+          crns.size == 1 && crns[0] == "A111111"
+        },
+      )
     }
     probationIntegrationLaoMockServer.resetRequests()
     probationIntegrationLaoMockServer.stubGetAllCases(
@@ -294,8 +320,32 @@ class ReconciliationTest : IntegrationTestBase() {
           assertThat(it.until).isNull()
         },
       )
-      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn(eq("A111111"), any(), any())
-      verify(laoDataUpdateService, times(1)).saveLaoDataForCrn(eq("A111112"), any(), any())
+      verify(laoCrnRepository, times(1)).saveAll(
+        argThat<List<LaoCrn>> { crns ->
+          crns.size == 1 && crns[0].crn == "A111112"
+        },
+      )
+      verify(laoExclusionRepository, times(1)).saveAll(
+        argThat<List<LaoExclusion>> { crns ->
+          crns.size == 1 && crns[0].crn == "A111112" && crns[0].userId == "userb"
+        },
+      )
+      verify(laoExclusionRepository, times(1)).deleteAllByCrns(
+        argThat<List<String>> { crns ->
+          crns.size == 1 && crns[0] == "A111112"
+        },
+      )
+      // These shouldn't have changed from above
+      verify(laoRestrictionRepository, times(1)).saveAll(
+        argThat<List<LaoRestriction>> { crns ->
+          crns.size == 1 && crns[0].crn == "A111111" && crns[0].userId == "userb"
+        },
+      )
+      verify(laoRestrictionRepository, times(1)).deleteAllByCrns(
+        argThat<List<String>> { crns ->
+          crns.size == 1 && crns[0] == "A111111"
+        },
+      )
     }
   }
 
