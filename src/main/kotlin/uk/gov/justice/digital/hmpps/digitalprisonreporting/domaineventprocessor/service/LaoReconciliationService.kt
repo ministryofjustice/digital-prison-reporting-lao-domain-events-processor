@@ -92,37 +92,37 @@ class LaoReconciliationService(
       return
     }
 
-    log.info("adding missing crns")
-    missingCrns.chunked(500).forEachIndexed { index, chunk ->
-      log.info("Chunk $index of missing crns")
-      laoCrnRepository.saveAll(
-        chunk.map {
-          LaoCrn(
-            crn = it,
-            version = 0,
-          )
-        },
-      )
-    }
-    log.info("finished adding missing crns")
-
-    log.info("Starting to reconcile restrictions and exclusions")
-    crnsToReconcile.chunked(500).forEachIndexed { idx, crnChunk ->
-      log.info("Chunk $idx of crns to reconcile restrictions and exclusions of")
-      transactionalRunner.run {
-        log.info("Processed index $idx")
-        val exclusions = crnChunk.flatMap { liveLaoExclusionsByCrn[it].orEmpty() }
-        val restrictions = crnChunk.flatMap { liveLaoRestrictionsByCrn[it].orEmpty() }
-
-        if (exclusions.isNotEmpty()) {
-          laoExclusionRepository.deleteAllByCrns(crnChunk)
-          laoExclusionRepository.saveAll(exclusions)
-        }
-        if (restrictions.isNotEmpty()) {
-          laoRestrictionRepository.deleteAllByCrns(crnChunk)
-          laoRestrictionRepository.saveAll(restrictions)
-        }
-      }
-    }
+//    log.info("adding missing crns")
+//    missingCrns.chunked(500).forEachIndexed { index, chunk ->
+//      log.info("Chunk $index of missing crns")
+//      laoCrnRepository.saveAll(
+//        chunk.map {
+//          LaoCrn(
+//            crn = it,
+//            version = 0,
+//          )
+//        },
+//      )
+//    }
+//    log.info("finished adding missing crns")
+//
+//    log.info("Starting to reconcile restrictions and exclusions")
+//    crnsToReconcile.chunked(500).forEachIndexed { idx, crnChunk ->
+//      log.info("Chunk $idx of crns to reconcile restrictions and exclusions of")
+//      transactionalRunner.run {
+//        log.info("Processed index $idx")
+//        val exclusions = crnChunk.flatMap { liveLaoExclusionsByCrn[it].orEmpty() }
+//        val restrictions = crnChunk.flatMap { liveLaoRestrictionsByCrn[it].orEmpty() }
+//
+//        if (exclusions.isNotEmpty()) {
+//          laoExclusionRepository.deleteAllByCrns(crnChunk)
+//          laoExclusionRepository.saveAll(exclusions)
+//        }
+//        if (restrictions.isNotEmpty()) {
+//          laoRestrictionRepository.deleteAllByCrns(crnChunk)
+//          laoRestrictionRepository.saveAll(restrictions)
+//        }
+//      }
+//    }
   }
 }
