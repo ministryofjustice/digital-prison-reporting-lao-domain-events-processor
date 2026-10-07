@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrn
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoCrnRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusion
 import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.data.LaoExclusionRepository
@@ -14,10 +13,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreporting.domaineventprocessor.
 @Service
 class LaoReconciliationService(
   private val laoDataProbationIntegrationClient: LaoDataProbationIntegrationClient,
-  private val laoCrnInitialisationService: LaoCrnInitialisationService,
-  private val laoDataUpdateService: LaoDataUpdateService,
+//  private val laoCrnInitialisationService: LaoCrnInitialisationService,
+//  private val laoDataUpdateService: LaoDataUpdateService,
   private val laoCrnRepository: LaoCrnRepository,
-  private val transactionalRunner: TransactionalRunner,
+//  private val transactionalRunner: TransactionalRunner,
   private val laoExclusionRepository: LaoExclusionRepository,
   private val laoRestrictionRepository: LaoRestrictionRepository,
   @Value("batch.dryrun")

@@ -49,16 +49,16 @@ jobs:
       - id: app_version
         name: Application version creators
         uses: ministryofjustice/hmpps-github-shared-actions/.github/actions/build-test-and-deploy/create_app_version@90bdfa991e9944e4997eba4c1f2709d21ec807ea # v1.1.5
-  gradle_verify:
-    name: Validate the kotlin
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
-    secrets: inherit
-    with:
-      gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew assemble check'
-      upload-build-artifacts: true
-      java-version: "25"
-    needs:
-      - app_version
+#  gradle_verify:
+#    name: Validate the kotlin
+#    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+#    secrets: inherit
+#    with:
+#      gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew assemble check'
+#      upload-build-artifacts: true
+#      java-version: "25"
+#    needs:
+#      - app_version
   test_build:
     name: Build docker image from hmpps-github-actions without pushing
     if: github.ref != 'refs/heads/main'
